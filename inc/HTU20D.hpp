@@ -34,9 +34,7 @@
 
 class HTU20D {
 public:
-  HTU20D(TwoWire &);
-
-  void begin();
+  void begin(TwoWire &);
 
   void onTemperatureReadDone(void (*func)(uint16_t val));
 
@@ -47,10 +45,19 @@ public:
   void readHumidity();
 
 private:
+  enum {
+    IDLE,
+    READ_TEMPERATURE,
+    READ_HUMIDITY,
+  } state;
+
   Timer timerDelay;
+  TwoWire *wire;
 
   void (*callbackTemperature)(uint16_t val);
   void (*callbackHumidity)(uint16_t val);
+
+  static void DelayDone(void *);
 };
 
 #endif //HTU20D_HPP

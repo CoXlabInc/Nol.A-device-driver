@@ -29,20 +29,73 @@
 
 #include "HTU20D.hpp"
 
-HTU20D::HTU20D(TwoWire &) {
-}
-
-void HTU20D::begin() {
+void HTU20D::begin(TwoWire &w) {
+  this->wire = &w;
+  timerDelay.stop();
+  state = IDLE;
+  timerDelay.onFired(DelayDone, this);
 }
 
 void HTU20D::onTemperatureReadDone(void (*func)(uint16_t val)) {
+  callbackTemperature = func;
 }
 
 void HTU20D::readTemperature() {
+  timerDelay.stop();
+
+  wire->beginTransmission(0x40);
+  wire->write(0xF3); //Trigger temperature measurement without holding master.
+  wire->endTransmission();
+
+  state = READ_TEMPERATURE;
+  timerDelay.startOneShot(50);
 }
 
 void HTU20D::onHumidityReadDone(void (*func)(uint16_t val)) {
+  callbackHumidity = func;
 }
 
 void HTU20D::readHumidity() {
+  timerDelay.stop();
+
+  wire->beginTransmission(0x40);
+  wire->write(0xF5); //Trigger humidity measurement without holding master.
+  wire->endTransmission();
+
+  state = READ_HUMIDITY;
+  timerDelay.startOneShot(50);
+}
+
+void HTU20D::DelayDone(void *ctx) {
+  HTU20D *sensor = (HTU20D *) ctx;
+
+  if (sensor->state != IDLE) {
+    if (sensor->wire->requestFrom(0x40, 3) == 0) {
+      sensor->timerDelay.startOneShot(10);
+      return;
+    }
+  }
+
+  if (sensor->state == READ_TEMPERATURE) {
+    uint16_t sTemp = sensor->wire->read() << 8;
+    sTemp |= sensor->wire->read();
+    sensor->wire->read(); //checksum
+
+    if (sensor->callbackTemperature) {
+      sensor->callbackTemperature(17572ul * sTemp / 65536ul - 4685);
+    }
+
+    sensor->state = IDLE;
+
+  } else if (sensor->state == READ_HUMIDITY) {
+    uint16_t sRH = sensor->wire->read() << 8;
+    sRH |= sensor->wire->read();
+    sensor->wire->read(); //checksum
+
+    if (sensor->callbackHumidity) {
+      sensor->callbackHumidity(12500ul * sRH / 65536ul - 6);
+    }
+
+    sensor->state = IDLE;
+  }
 }

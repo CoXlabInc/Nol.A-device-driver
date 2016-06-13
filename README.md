@@ -1,1 +1,1 @@
-# Nol.A-device-driver
+# Device Driver for Nol.A SDK

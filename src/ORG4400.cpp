@@ -79,20 +79,28 @@ void ORG4400::NMEAReceived(void *ctx) {
     if (*strTmp != '0') {
       strtok(NULL, "."); //Time (HH:MM:SS)
       strtok(NULL, ","); //Time (subseconds)
+
       int32_t latitude = strtol(strtok(NULL, "."), NULL, 10) * 10000;
       latitude |= strtol(strtok(NULL, ","), NULL, 10);
+
       strtok(NULL, ","); //North or South
+
       int32_t longitude = strtol(strtok(NULL, "."), NULL, 10) * 10000;
       longitude |= strtol(strtok(NULL, ","), NULL, 10);
+
       strtok(NULL, ","); //East or West
+
       strtok(NULL, ","); //Fix Quality (0:Invalid, 1:GPS fix, 2:DGPS fix)
-      strtok(NULL, ","); //Number of Satellites
+
+      uint8_t numSat = strtoul(strtok(NULL, ","), NULL, 10);
+
       strtok(NULL, ","); //Horizontal Dilution of Precision
+
       int32_t altitude = strtol(strtok(NULL, "."), NULL, 10) * 10;
       altitude |= strtol(strtok(NULL, ","), NULL, 10);
 
       if (gps->callbackRead) {
-        gps->callbackRead(latitude, longitude, altitude);
+        gps->callbackRead(latitude, longitude, altitude, numSat);
       }
     }
   } while(0);
@@ -100,7 +108,7 @@ void ORG4400::NMEAReceived(void *ctx) {
   gps->uart->input(gps->buf, 254, '\r');
 }
 
-void ORG4400::onReadDone(void (*func)(int32_t, int32_t, int32_t)) {
+void ORG4400::onReadDone(void (*func)(int32_t, int32_t, int32_t, uint8_t)) {
   callbackRead = func;
 }
 

@@ -38,7 +38,8 @@ public:
 
   void onReadDone(void (*func)(int32_t latitude,
                                int32_t longitude,
-                               int32_t altitude));
+                               int32_t altitude,
+                               uint8_t numSatellites));
 
   void turnOn();
 
@@ -53,7 +54,7 @@ private:
 
   char buf[255];
 
-  void (*callbackRead)(int32_t, int32_t, int32_t);
+  void (*callbackRead)(int32_t, int32_t, int32_t, uint8_t);
 
   static void NMEAReceived(void *);
 };

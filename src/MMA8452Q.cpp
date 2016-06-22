@@ -29,10 +29,24 @@
 
 #include "MMA8452Q.hpp"
 
-void MMA8452Q::begin(TwoWire &w, uint8_t addr) {
+void MMA8452Q::begin(TwoWire &w, uint8_t addr, int8_t pinInt1, int8_t pinInt2) {
   this->wire = &w;
   this->addr = addr;
+
+  if (pinInt1 >= 0) {
+    pinMode(pinInt1, INPUT_PULLUP);
+    attachInterrupt(pinInt1, EventInterrupt1, this, FALLING);
+  }
+
+  if (pinInt2 >= 0) {
+    pinMode(pinInt2, INPUT_PULLUP);
+    attachInterrupt(pinInt2, EventInterrupt2, this, FALLING);
+  }
 }
+
+void MMA8452Q::begin(TwoWire &wire, uint8_t addr) {
+  begin(wire, addr, -1, -1);
+};
 
 uint8_t MMA8452Q::readSensorId() {
   return read(REG_WHO_AM_I);
@@ -99,6 +113,93 @@ void MMA8452Q::setStandby() {
   write(REG_CTRL1, ctrl1);
 }
 
+MMA8452Q::ODR_t MMA8452Q::getODR() {
+  uint8_t ctrl1 = read(REG_CTRL1);
+  return (ODR_t) ((ctrl1 & (bit(5) | bit(4) | bit(3))) >> 3);
+}
+
+void MMA8452Q::setODR(ODR_t val) {
+  bool active = false;
+  uint8_t ctrl1 = read(REG_CTRL1);
+  if (bitRead(ctrl1, 0) == 1) {
+    bitClear(ctrl1, 0);
+    write(REG_CTRL1, ctrl1);
+    active = true;
+  }
+
+  ctrl1 &= ~(bit(5) | bit(4) | bit(3));
+  ctrl1 |= (((uint8_t) val << 3) & (bit(5) | bit(4) | bit(3)));
+
+  if (active) {
+    bitSet(ctrl1, 0);
+  }
+  write(REG_CTRL1, ctrl1);
+}
+
+void MMA8452Q::onDetectTransient(void (*func)(MMA8452Q &)) {
+  handlerTransientDetection = func;
+}
+
+static const uint32_t maxDuration[8][4] = {
+  {  319000,   319000, 319000,   319000 }, //ODR: 800 Hz
+  {  638000,   638000, 638000,   638000 }, //ODR: 400 Hz
+  { 1280000,  1280000, 638000,  1280000 }, //ODR: 200 Hz
+  { 2550000,  2550000, 638000,  2550000 }, //ODR: 100 Hz
+  { 5100000,  5100000, 638000,  5100000 }, //ODR: 50 Hz
+  { 5100000, 20400000, 638000, 20400000 }, //ODR: 12.5 Hz
+  { 5100000, 20400000, 638000, 40800000 }, //ODR: 6.25 Hz
+  { 5100000, 20400000, 638000, 40800000 }, //ODR: 1.56 Hz
+};
+
+static const uint32_t step[8][4] = {
+  {  1250,  1250, 1250,   1250 }, //ODR: 800 Hz
+  {  2500,  2500, 2500,   2500 }, //ODR: 400 Hz
+  {  5000,  5000, 2500,   5000 }, //ODR: 200 Hz
+  { 10000, 10000, 2500,  10000 }, //ODR: 100 Hz
+  { 20000, 20000, 2500,  20000 }, //ODR: 50 Hz
+  { 20000, 80000, 2500,  80000 }, //ODR: 12.5 Hz
+  { 20000, 80000, 2500, 160000 }, //ODR: 6.25 Hz
+  { 20000, 80000, 2500, 160000 }, //ODR: 1.56 Hz
+};
+
+void MMA8452Q::setTransientDetection(bool enableX,
+                                     bool enableY,
+                                     bool enableZ,
+                                     uint16_t thresholdMilliG,
+                                     uint32_t durationMicros) {
+  bool active = false;
+  uint8_t ctrl1 = read(REG_CTRL1);
+  if (bitRead(ctrl1, 0) == 1) {
+    bitClear(ctrl1, 0);
+    write(REG_CTRL1, ctrl1);
+    active = true;
+  }
+
+  write(REG_TRANSIENT_CFG,
+        (1 << 4) | //Event flag latch enabled
+        ((enableZ) ? (1 << 3) : 0) |
+        ((enableY) ? (1 << 2) : 0) |
+        ((enableZ) ? (1 << 1) : 0));
+
+  thresholdMilliG = min(thresholdMilliG, 8000);
+  write(REG_TRANSIENT_THS, round(thresholdMilliG / 63));
+
+  uint8_t mode = read(REG_CTRL2) & (bit(1) | bit(0));
+  ODR_t odr = getODR();
+
+  durationMicros = min(durationMicros, maxDuration[odr][mode]);
+  write(REG_TRANSIENT_COUNT, round(durationMicros / step[odr][mode]));
+
+  // Enable transient detection interrupt and route to INT1.
+  write(REG_CTRL4, (1 << 5));
+  write(REG_CTRL5, (1 << 5));
+
+  if (active) {
+    bitSet(ctrl1, 0);
+  }
+  write(REG_CTRL1, ctrl1);
+}
+
 void MMA8452Q::read(uint8_t reg, uint8_t len, uint8_t *dst) {
   if (dst == NULL)
     return;
@@ -123,4 +224,36 @@ void MMA8452Q::write(uint8_t reg, uint8_t len, const uint8_t *val) {
     wire->write(val[i]);
   }
   wire->endTransmission(true);
+}
+
+void MMA8452Q::EventInterrupt1(void *ctx) {
+  MMA8452Q *gyro = (MMA8452Q *) ctx;
+
+  uint8_t intSrc = gyro->read(REG_INT_SOURCE);
+
+  if (intSrc == (1 << 2)) {
+    /* TODO: Freefall-motion */
+  } else if (intSrc == (1 << 3)) {
+    /* TODO: Pulse */
+  } else if (intSrc == (1 << 4)) {
+    /* TODO: Landscape/portrait orientation */
+  } else if (intSrc == (1 << 5)) {
+    /* Transient */
+    gyro->read(REG_TRANSIENT_SRC); //clear interrupt
+    if (gyro->handlerTransientDetection) {
+      gyro->handlerTransientDetection(*gyro);
+    }
+  }
+}
+
+void MMA8452Q::EventInterrupt2(void *ctx) {
+  MMA8452Q *gyro = (MMA8452Q *) ctx;
+
+  uint8_t intSrc = gyro->read(REG_INT_SOURCE);
+
+  if (intSrc == (1 << 0)) {
+    /* TODO: Data ready */
+  } else if (intSrc == (1 << 7)) {
+    /* TODO: Auto SLEEP/WAKE */
+  }
 }

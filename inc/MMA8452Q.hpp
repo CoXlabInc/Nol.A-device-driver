@@ -34,7 +34,8 @@
 
 class MMA8452Q {
 public:
-  void begin(TwoWire &, uint8_t addr);
+  void begin(TwoWire &wire, uint8_t addr, int8_t pinInt1, int8_t pinInt2);
+  void begin(TwoWire &wire, uint8_t addr);
 
   uint8_t readSensorId();
   void readXYZ(int16_t *x, int16_t *y, int16_t *z);
@@ -43,10 +44,31 @@ public:
   void setActive();
   void setStandby();
 
+  typedef enum {
+    ODR_800Hz = 0,
+    ODR_400Hz = 1,
+    ODR_200Hz = 2,
+    ODR_100Hz = 3,
+    ODR_50Hz = 4,
+    ODR_12p5Hz = 5,
+    ODR_6p25Hz = 6,
+    ODR_1p56Hz = 7,
+  } ODR_t;
+  ODR_t getODR();
+  void setODR(ODR_t val);
+
+  void onDetectTransient(void (*func)(MMA8452Q &));
+  void setTransientDetection(bool enableX,
+                             bool enableY,
+                             bool enableZ,
+                             uint16_t thresholdMilliG,
+                             uint32_t durationMicros);
 
 private:
   TwoWire *wire;
   uint8_t addr;
+
+  void (*handlerTransientDetection)(MMA8452Q &);
 
   enum {
     REG_STATUS           = 0x00,
@@ -93,6 +115,15 @@ private:
     REG_OFF_Z            = 0x31,
   };
 
+  enum {
+    INT_EN_ASLP    = (1 << 7),
+    INT_EN_TRANS   = (1 << 5),
+    INT_EN_LNDPRT  = (1 << 4),
+    INT_EN_PULSE   = (1 << 3),
+    INT_EN_FF_MT   = (1 << 2),
+    INT_EN_DRDY    = (1 << 0),
+  };
+
   uint8_t read(uint8_t reg) {
     uint8_t val;
     read(reg, 1, &val);
@@ -106,6 +137,9 @@ private:
   }
 
   void write(uint8_t reg, uint8_t len, const uint8_t *val);
+
+  static void EventInterrupt1(void *);
+  static void EventInterrupt2(void *);
 };
 
 #endif //MMA8452Q_HPP

@@ -54,7 +54,7 @@ public:
   long averageValue(uint8_t times = 32);
   void setOffset(long offset);
   void setScale(float scale = 742.f);
-  float getMilliGram();
+  float getGram();
 
 private:
   const uint8_t _pin_dout;

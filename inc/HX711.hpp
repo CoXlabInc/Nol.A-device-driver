@@ -25,6 +25,10 @@
 /**
  * @author Jongsoo Jeong (CoXlab)
  * @date 2016. 7. 8.
+ * @brief Nol.A library for digital weight scale based on HX711
+ *
+ * @note This code is implemented based on Weihong Guan's Arduino library
+ * (https://github.com/aguegu/Arduino).
  */
 
 /* Arduino library for digital weight scale of hx711
@@ -50,17 +54,19 @@ class Hx711 {
 public:
   Hx711(uint8_t pin_din, uint8_t pin_slk);
   void begin();
-  long getValue();
-  long averageValue(uint8_t times = 32);
-  void setOffset(long offset);
-  void setScale(float scale = 742.f);
-  float getGram();
+  int32_t getMilligram();
+  int32_t getAveragedMilligram(uint8_t times = 32);
+  void setOffset(int32_t offset);
+  void setScale(int32_t scale = 742);
 
 private:
   const uint8_t _pin_dout;
   const uint8_t _pin_slk;
-  long _offset;
-  float _scale;
+  int32_t _offset;
+  int32_t _scale;
+
+  int32_t getRaw();
+  int32_t getAverage(uint8_t times = 32);
 };
 
 #endif /* HX711_HPP */

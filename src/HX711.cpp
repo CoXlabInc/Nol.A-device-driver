@@ -25,6 +25,10 @@
 /**
  * @author Jongsoo Jeong (CoXlab)
  * @date 2016. 7. 8.
+ * @brief Nol.A library for digital weight scale based on HX711
+ *
+ * @note This code is implemented based on Weihong Guan's Arduino library
+ * (https://github.com/aguegu/Arduino).
  */
 
 /*
@@ -48,24 +52,32 @@ void Hx711::begin() {
   delayMicroseconds(100);
   digitalWrite(_pin_slk, LOW);
 
-  averageValue();
-  this->setOffset(averageValue());
+  this->setOffset(getAverage());
   this->setScale();
 }
 
-long Hx711::averageValue(uint8_t times) {
-  long sum = 0;
+int32_t Hx711::getAveragedMilligram(uint8_t times) {
+  return (getAverage(times) - _offset) * 1000 / _scale;
+}
+
+int32_t Hx711::getMilligram() {
+  return (getRaw() - _offset) * 1000 / _scale;
+}
+
+int32_t Hx711::getAverage(uint8_t times) {
+  int32_t sum = 0;
   for (uint8_t i = 0; i < times; i++) {
-    sum += getValue();
+    sum += getRaw();
   }
 
   return sum / times;
 }
 
-long Hx711::getValue() {
+int32_t Hx711::getRaw() {
   uint8_t data[3];
 
-  while (digitalRead(_pin_dout));
+  while (digitalRead(_pin_dout)) {
+  }
 
   for (uint8_t j = 3; j--;) {
     for (uint8_t i = 8; i--;) {
@@ -80,20 +92,15 @@ long Hx711::getValue() {
 
   data[2] ^= 0x80;
 
-  return (((uint32_t) data[2] << 16) |
-          ((uint32_t) data[1] << 8) |
-          ((uint32_t) data[0] << 0));
+  return (((int32_t) data[2] << 16) |
+          ((int32_t) data[1] << 8) |
+          ((int32_t) data[0] << 0));
 }
 
-void Hx711::setOffset(long offset) {
+void Hx711::setOffset(int32_t offset) {
   _offset = offset;
 }
 
-void Hx711::setScale(float scale) {
+void Hx711::setScale(int32_t scale) {
   _scale = scale;
-}
-
-float Hx711::getGram() {
-  long val = (averageValue() - _offset);
-  return (float) val / _scale;
 }

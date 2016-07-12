@@ -57,7 +57,10 @@ public:
   int32_t getMilligram();
   int32_t getAveragedMilligram(uint8_t times = 32);
   void setOffset(int32_t offset);
+  int32_t getOffset();
   void setScale(int32_t scale = 742);
+  int32_t getScale();
+  void adjustZero();
 
 private:
   const uint8_t _pin_dout;

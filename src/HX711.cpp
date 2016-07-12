@@ -52,8 +52,12 @@ void Hx711::begin() {
   delayMicroseconds(100);
   digitalWrite(_pin_slk, LOW);
 
-  this->setOffset(getAverage());
+  this->adjustZero();
   this->setScale();
+}
+
+void Hx711::adjustZero() {
+  this->setOffset(getAverage());
 }
 
 int32_t Hx711::getAveragedMilligram(uint8_t times) {
@@ -101,6 +105,14 @@ void Hx711::setOffset(int32_t offset) {
   _offset = offset;
 }
 
+int32_t Hx711::getOffset() {
+  return _offset;
+}
+
 void Hx711::setScale(int32_t scale) {
   _scale = scale;
+}
+
+int32_t Hx711::getScale() {
+  return _scale;
 }

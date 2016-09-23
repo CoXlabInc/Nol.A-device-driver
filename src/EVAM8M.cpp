@@ -24,39 +24,54 @@
 
 /**
  * @author Jongsoo Jeong (CoXlab)
- * @date 2016. 6. 13.
+ * @date 2016. 9. 7.
  */
 
-#ifndef ORG4400_HPP
-#define ORG4400_HPP
+#include "EVAM8M.hpp"
+#include <cox.h>
 
-#include <GPS.hpp>
+void EVAM8M::begin(SerialPort &uart) {
+  this->uart = &uart;
 
-class ORG4400 : public Gps {
-public:
-  void begin(SerialPort &uart, uint8_t pinOnOff, uint8_t pinWakeup);
+  uart.begin(9600);
+  uart.onReceive(NMEAReceived, this);
+  uart.input(this->buf, 254, '\r');
+  uart.listen();
+}
 
-  void onReadDone(void (*func)(int32_t latitude,
-                               int32_t longitude,
-                               int32_t altitude,
-                               uint8_t numSatellites));
+void EVAM8M::NMEAReceived(void *ctx) {
+  EVAM8M *gps = (EVAM8M *) ctx;
 
-  void turnOn();
+  char *received = gps->buf;
 
-  void turnOff();
+  while(*received != '$' && received < gps->buf + sizeof(gps->buf)) {
+    received++;
+  }
 
-  bool isOn();
+  if (memcmp(received, "$GNGGA", 6) == 0) {
+    uint8_t fixQuality, hour = 0xFF, minute = 0xFF, sec = 0xFF, subsec = 0xFF, numSatellites = 0;
+    int32_t latitude, longitude, altitude;
 
-private:
-  SerialPort *uart;
-  uint8_t pinOnOff;
-  uint8_t pinWakeup;
+    fixQuality = ParseGGA( received,
+                  &hour, &minute, &sec, &subsec,
+                  &latitude, &longitude,
+                  &numSatellites, NULL, &altitude,
+                  NULL, NULL, NULL);
+    if (gps->callbackRead) {
+      gps->callbackRead(fixQuality, hour, minute, sec, subsec,
+                        latitude, longitude, altitude, numSatellites);
+    }
+  }
 
-  char buf[255];
+  gps->uart->input(gps->buf, 254, '\r');
+}
 
-  void (*callbackRead)(int32_t, int32_t, int32_t, uint8_t);
+void EVAM8M::turnOn() {
+}
 
-  static void NMEAReceived(void *);
-};
+void EVAM8M::turnOff() {
+}
 
-#endif //ORG4400_HPP
+bool EVAM8M::isOn() {
+  return true;
+}

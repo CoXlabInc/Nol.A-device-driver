@@ -24,22 +24,17 @@
 
 /**
  * @author Jongsoo Jeong (CoXlab)
- * @date 2016. 6. 13.
+ * @date 2016. 9. 7.
  */
 
-#ifndef ORG4400_HPP
-#define ORG4400_HPP
+#ifndef EVAM8M_HPP
+#define EVAM8M_HPP
 
 #include <GPS.hpp>
 
-class ORG4400 : public Gps {
+class EVAM8M : public Gps {
 public:
-  void begin(SerialPort &uart, uint8_t pinOnOff, uint8_t pinWakeup);
-
-  void onReadDone(void (*func)(int32_t latitude,
-                               int32_t longitude,
-                               int32_t altitude,
-                               uint8_t numSatellites));
+  void begin(SerialPort &uart);
 
   void turnOn();
 
@@ -49,14 +44,10 @@ public:
 
 private:
   SerialPort *uart;
-  uint8_t pinOnOff;
-  uint8_t pinWakeup;
 
   char buf[255];
-
-  void (*callbackRead)(int32_t, int32_t, int32_t, uint8_t);
 
   static void NMEAReceived(void *);
 };
 
-#endif //ORG4400_HPP
+#endif //EVAM8M_HPP

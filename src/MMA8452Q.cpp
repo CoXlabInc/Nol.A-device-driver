@@ -113,6 +113,17 @@ void MMA8452Q::setStandby() {
   write(REG_CTRL1, ctrl1);
 }
 
+void MMA8452Q::setMode(Mode_t mode) {
+  uint8_t ctrl2 = read(REG_CTRL2) & ~(0x03);
+  ctrl2 |= mode;
+  write(REG_CTRL2, ctrl2);
+}
+
+MMA8452Q::Mode_t MMA8452Q::getMode() {
+  uint8_t ctrl2 = read(REG_CTRL2);
+  return (Mode_t) (ctrl2 & 0x03);
+}
+
 MMA8452Q::ODR_t MMA8452Q::getODR() {
   uint8_t ctrl1 = read(REG_CTRL1);
   return (ODR_t) ((ctrl1 & (bit(5) | bit(4) | bit(3))) >> 3);

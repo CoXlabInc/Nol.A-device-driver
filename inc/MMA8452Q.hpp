@@ -64,6 +64,15 @@ public:
                              uint16_t thresholdMilliG,
                              uint32_t durationMicros);
 
+  typedef enum {
+    MODE_NORMAL = 0,
+    MODE_LOW_NOISE_LOW_POWER = 1,
+    MODE_HIGH_RESOLUTION = 2,
+    MODE_LOW_POWER = 3,
+  } Mode_t;
+  void setMode(Mode_t);
+  Mode_t getMode();
+
 private:
   TwoWire *wire;
   uint8_t addr;

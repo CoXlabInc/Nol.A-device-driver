@@ -36,7 +36,7 @@ void EVAM8M::begin(SerialPort &uart) {
   uart.begin(9600);
   uart.onReceive(NMEAReceived, this);
   uart.input(this->buf, 254, '\r');
-  uart.listen();
+  uart.stopListening();
 }
 
 void EVAM8M::NMEAReceived(void *ctx) {
@@ -67,11 +67,13 @@ void EVAM8M::NMEAReceived(void *ctx) {
 }
 
 void EVAM8M::turnOn() {
+  uart->listen();
 }
 
 void EVAM8M::turnOff() {
+  uart->stopListening();
 }
 
 bool EVAM8M::isOn() {
-  return true;
+  return uart->isListening();
 }

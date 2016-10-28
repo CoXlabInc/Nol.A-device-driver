@@ -39,11 +39,11 @@ class M25P32 : public Storage {
 public:
   M25P32(uint8_t pinChipSelect, SPI &);
   void begin();
-  uint32_t length();
-  uint8_t read(int addr);
-  error_t read(void *dst, int addr, uint32_t len);
-  error_t write(int addr, uint8_t value);
-  error_t write(const uint8_t *buf, int addr, uint32_t len);
+  uint64_t length();
+  uint8_t read(uint64_t addr);
+  error_t read(void *dst, uint64_t addr, uint32_t len);
+  error_t write(uint64_t addr, uint8_t value);
+  error_t write(const uint8_t *buf, uint64_t addr, uint32_t len);
 
 private:
   SPI *spi;
@@ -54,7 +54,7 @@ private:
   void wakeup();
   void sleep();
   void enableWrite(bool enable);
-  error_t readInternal(void *dst, int addr, uint32_t len);
+  error_t readInternal(void *dst, uint32_t addr, uint32_t len);
   void waitUntilWriteDone();
 
   enum {

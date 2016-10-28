@@ -99,11 +99,11 @@ void M25P32::begin() {
   sleep();
 }
 
-uint32_t M25P32::length() {
+uint64_t M25P32::length() {
   return ADDR_END + 1;
 }
 
-uint8_t M25P32::read(int addr) {
+uint8_t M25P32::read(uint64_t addr) {
   uint8_t data;
 
   if (read(&data, addr, 1) == ERROR_SUCCESS) {
@@ -113,7 +113,7 @@ uint8_t M25P32::read(int addr) {
   }
 }
 
-error_t M25P32::readInternal(void *dst, int addr, uint32_t len) {
+error_t M25P32::readInternal(void *dst, uint32_t addr, uint32_t len) {
   uint32_t i;
 
   beginTransaction();
@@ -134,7 +134,7 @@ error_t M25P32::readInternal(void *dst, int addr, uint32_t len) {
   return ERROR_SUCCESS;
 }
 
-error_t M25P32::read(void *dst, int addr, uint32_t len) {
+error_t M25P32::read(void *dst, uint64_t addr, uint32_t len) {
   if (addr > ADDR_END || len == 0)
     return ERROR_INVALID_ARGS;
 
@@ -145,19 +145,18 @@ error_t M25P32::read(void *dst, int addr, uint32_t len) {
   return err;
 }
 
-error_t M25P32::write(int addr, uint8_t value) {
+error_t M25P32::write(uint64_t addr, uint8_t value) {
   return write(&value, addr, 1);
 }
 
-error_t M25P32::write(const uint8_t *buf, int addr, uint32_t len) {
+error_t M25P32::write(const uint8_t *buf, uint64_t addr, uint32_t len) {
   if (addr > ADDR_END || len == 0) {
     return ERROR_INVALID_ARGS;
   }
 
   wakeup();
 
-  uint8_t st;
-  uint32_t i, sectorAddr, pageAddr;
+  uint32_t sectorAddr, pageAddr;
   uint8_t tmpBuf[256];
 
   for (sectorAddr = (addr / 0x10000) * 0x10000;

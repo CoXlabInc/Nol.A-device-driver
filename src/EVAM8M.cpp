@@ -30,6 +30,15 @@
 #include "EVAM8M.hpp"
 #include <cox.h>
 
+EVAM8M::EVAM8M()
+  : gsaOpMode('\0'),
+    gsaNavMode(0),
+    gsaPDoP(99.99),
+    gsaHDoP(99.99),
+    gsaVDoP(99.99),
+    gsaParser(NULL) {
+}
+
 void EVAM8M::begin(SerialPort &uart) {
   this->uart = &uart;
 
@@ -61,6 +70,20 @@ void EVAM8M::NMEAReceived(void *ctx) {
       gps->callbackRead(fixQuality, hour, minute, sec, subsec,
                         latitude, longitude, altitude, numSatellites);
     }
+  } else if (gps->gsaParser != NULL && memcmp(received, "$GNGSA", 6) == 0) {
+    char opMode;
+    uint8_t navMode;
+    float pdop;
+    float hdop;
+    float vdop;
+
+    if (gps->gsaParser(received, &opMode, &navMode, &pdop, &hdop, &vdop)) {
+      gps->gsaOpMode = opMode;
+      gps->gsaNavMode = navMode;
+      gps->gsaPDoP = pdop;
+      gps->gsaHDoP = hdop;
+      gps->gsaVDoP = vdop;
+    }
   }
 
   gps->uart->input(gps->buf, 254, '\r');
@@ -76,4 +99,28 @@ void EVAM8M::turnOff() {
 
 bool EVAM8M::isOn() {
   return uart->isListening();
+}
+
+void EVAM8M::useGSA() {
+  this->gsaParser = ParseGSA;
+}
+
+char EVAM8M::getGsaOpMode() {
+  return this->gsaOpMode;
+}
+
+uint8_t EVAM8M::getGsaNavMode() {
+  return this->gsaNavMode;
+}
+
+float EVAM8M::getGsaPDoP() {
+  return this->gsaPDoP;
+}
+
+float EVAM8M::getGsaHDoP() {
+  return this->gsaHDoP;
+}
+
+float EVAM8M::getGsaVDoP() {
+  return this->gsaVDoP;
 }

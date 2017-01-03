@@ -315,3 +315,127 @@ uint8_t Gps::ParseGGA(const char *msg,
 
   return fixQuality;
 }
+
+bool Gps::ParseGSA(const char *msg,
+                   char *opMode,
+                   uint8_t *navMode,
+                   float *pdop,
+                   float *hdop,
+                   float *vdop) {
+  uint8_t len;
+  char buf[100];
+
+  // char TEST[] = "$GPGSA,A,3,23,29,07,08,09,18,26,28,,,,,1.94,1.18,1.54,1*0D";
+  // msg = TEST;
+
+  // printf("%s():%s\n", __func__, msg);
+
+  if (*msg != '$') {
+    return false;
+  }
+
+  /* Find the first comma. */
+  len = CopyStringUntil(buf, msg, ',', sizeof(buf));
+  msg += len + 1;
+
+  /* opMode */
+  len = CopyStringUntil(buf, msg, ',', sizeof(buf));
+  if (len != 1) {
+    return false;
+  }
+  msg += len + 1;
+
+  if (opMode) {
+    *opMode = buf[0];
+    // printf("%s():opMode:%c\n", __func__, *opMode);
+  }
+
+  /* navMode */
+  len = CopyStringUntil(buf, msg, ',', sizeof(buf));
+  if (len != 1) {
+    return false;
+  }
+  msg += len + 1;
+
+  if (navMode) {
+    *navMode = strtoul(buf, NULL, 10);
+    // printf("%s():opMode:%u\n", __func__, *navMode);
+  }
+
+  /* Skip 12 satellites. */
+  for (uint8_t i = 0; i < 12; i++) {
+    len = CopyStringUntil(buf, msg, ',', sizeof(buf));
+    msg += len + 1;
+  }
+
+  /* PDoP */
+  len = CopyStringUntil(buf, msg, '.', sizeof(buf));
+  msg += len + 1;
+
+  if (pdop) {
+    *pdop = strtoul(buf, NULL, 10);
+  }
+
+  len = CopyStringUntil(buf, msg, ',', sizeof(buf));
+  msg += len + 1;
+
+  if (pdop) {
+    float m = (float) strtoul(buf, NULL, 10);
+
+    while (len-- > 0) {
+      m /= 10.;
+    }
+
+    *pdop += m;
+
+    // printf("%s():PDoP:%u.%02u\n", __func__, (uint16_t) *pdop, (uint16_t) round(*pdop * 100) % 100);
+  }
+
+  /* HDoP */
+  len = CopyStringUntil(buf, msg, '.', sizeof(buf));
+  msg += len + 1;
+
+  if (hdop) {
+    *hdop = strtoul(buf, NULL, 10);
+  }
+
+  len = CopyStringUntil(buf, msg, ',', sizeof(buf));
+  msg += len + 1;
+
+  if (hdop) {
+    float m = (float) strtoul(buf, NULL, 10);
+
+    while (len-- > 0) {
+      m /= 10.;
+    }
+
+    *hdop += m;
+
+    // printf("%s():HDoP:%u.%02u\n", __func__, (uint16_t) *hdop, (uint16_t) round(*hdop * 100.) % 100);
+  }
+
+  /* VDoP */
+  len = CopyStringUntil(buf, msg, '.', sizeof(buf));
+  msg += len + 1;
+
+  if (vdop) {
+    *vdop = strtoul(buf, NULL, 10);
+  }
+
+  len = CopyStringUntil(buf, msg, '*', sizeof(buf));
+  msg += len + 1;
+
+  if (vdop) {
+    float m = (float) strtoul(buf, NULL, 10);
+
+    while (len-- > 0) {
+      m /= 10.;
+    }
+
+    *vdop += m;
+
+    // printf("%s():VDoP:%u.%02u\n", __func__, (uint16_t) *vdop, (uint16_t) round(*vdop * 100.) % 100);
+  }
+
+  return true;
+}

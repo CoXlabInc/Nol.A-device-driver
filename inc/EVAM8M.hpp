@@ -34,18 +34,45 @@
 
 class EVAM8M : public Gps {
 public:
+  EVAM8M();
+
   void begin(SerialPort &uart);
 
-  void turnOn();
+  virtual void turnOn();
 
-  void turnOff();
+  virtual void turnOff();
 
-  bool isOn();
+  virtual bool isOn();
+
+  void useGSA();
+
+  char getGsaOpMode();
+
+  uint8_t getGsaNavMode();
+
+  float getGsaPDoP();
+
+  float getGsaHDoP();
+
+  float getGsaVDoP();
 
 private:
   SerialPort *uart;
 
   char buf[255];
+
+  char gsaOpMode;
+  uint8_t gsaNavMode;
+  float gsaPDoP;
+  float gsaHDoP;
+  float gsaVDoP;
+
+  bool (*gsaParser)(const char *msg,
+                    char *opMode,
+                    uint8_t *navMode,
+                    float *pdop,
+                    float *hdop,
+                    float *vdop);
 
   static void NMEAReceived(void *);
 };

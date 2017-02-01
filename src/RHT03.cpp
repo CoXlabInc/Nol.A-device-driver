@@ -49,7 +49,7 @@ int RHT03::update()
 {
     unsigned long marks[41] = {0};
     unsigned long stops[40] = {0};
-    unsigned int highTime, lowTime;
+    unsigned int highTime;
     uint8_t dataBytes[5] = {0};
     
     noInterrupts();
@@ -91,9 +91,8 @@ int RHT03::update()
     
     for (int i=0; i<40; i++)
     {
-        lowTime = stops[i] - marks[i];
         highTime = marks[i + 1] - stops[i];
-        if (highTime > 40/*lowTime*/)
+        if (highTime > 40)
         {
             dataBytes[i/8] |= (1<<(7 - i%8));
         }

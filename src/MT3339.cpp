@@ -23,14 +23,14 @@
  */
 
 /**
- * @author Jongsoo Jeong (CoXlab)
- * @date 2016. 9. 7.
- */
+   \author Jongsoo Jeong (CoXlab)
+   \date 2017. 6. 14.
+*/
 
-#include "EVAM8M.hpp"
+#include "MT3339.hpp"
 #include <cox.h>
 
-EVAM8M::EVAM8M()
+MT3339::MT3339()
   : gsaOpMode('\0'),
     gsaNavMode(0),
     gsaPDoP(99.99),
@@ -39,7 +39,7 @@ EVAM8M::EVAM8M()
     gsaParser(NULL) {
 }
 
-void EVAM8M::begin(SerialPort &uart) {
+void MT3339::begin(SerialPort &uart) {
   this->uart = &uart;
 
   uart.begin(9600);
@@ -48,8 +48,8 @@ void EVAM8M::begin(SerialPort &uart) {
   uart.stopListening();
 }
 
-void EVAM8M::NMEAReceived(void *ctx) {
-  EVAM8M *gps = (EVAM8M *) ctx;
+void MT3339::NMEAReceived(void *ctx) {
+  MT3339 *gps = (MT3339 *) ctx;
 
   char *received = gps->buf;
 
@@ -57,7 +57,8 @@ void EVAM8M::NMEAReceived(void *ctx) {
     received++;
   }
 
-  if (memcmp(received, "$GNGGA", 6) == 0) {
+  printf("%s\n", received);
+  if (memcmp(received, "$GPGGA", 6) == 0) {
     uint8_t fixQuality, hour = 0xFF, minute = 0xFF, sec = 0xFF, numSatellites = 0;
     uint16_t subsec = 0xFFFF;
     int32_t latitude, longitude, altitude;
@@ -71,7 +72,7 @@ void EVAM8M::NMEAReceived(void *ctx) {
       gps->callbackRead(fixQuality, hour, minute, sec, subsec,
                         latitude, longitude, altitude, numSatellites);
     }
-  } else if (gps->gsaParser != NULL && memcmp(received, "$GNGSA", 6) == 0) {
+  } else if (gps->gsaParser != NULL && memcmp(received, "$GPGSA", 6) == 0) {
     char opMode;
     uint8_t navMode;
     float pdop;
@@ -90,38 +91,38 @@ void EVAM8M::NMEAReceived(void *ctx) {
   gps->uart->input(gps->buf, 254, '\r');
 }
 
-void EVAM8M::turnOn() {
+void MT3339::turnOn() {
   uart->listen();
 }
 
-void EVAM8M::turnOff() {
+void MT3339::turnOff() {
   uart->stopListening();
 }
 
-bool EVAM8M::isOn() {
+bool MT3339::isOn() {
   return uart->isListening();
 }
 
-void EVAM8M::useGSA() {
+void MT3339::useGSA() {
   this->gsaParser = ParseGSA;
 }
 
-char EVAM8M::getGsaOpMode() {
+char MT3339::getGsaOpMode() {
   return this->gsaOpMode;
 }
 
-uint8_t EVAM8M::getGsaNavMode() {
+uint8_t MT3339::getGsaNavMode() {
   return this->gsaNavMode;
 }
 
-float EVAM8M::getGsaPDoP() {
+float MT3339::getGsaPDoP() {
   return this->gsaPDoP;
 }
 
-float EVAM8M::getGsaHDoP() {
+float MT3339::getGsaHDoP() {
   return this->gsaHDoP;
 }
 
-float EVAM8M::getGsaVDoP() {
+float MT3339::getGsaVDoP() {
   return this->gsaVDoP;
 }

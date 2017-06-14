@@ -23,18 +23,18 @@
  */
 
 /**
- * @author Jongsoo Jeong (CoXlab)
- * @date 2016. 9. 7.
- */
+   \author Jongsoo Jeong (CoXlab)
+   \date 2017. 6. 14.
+*/
 
-#ifndef EVAM8M_HPP
-#define EVAM8M_HPP
+#ifndef MT3339_HPP
+#define MT3339_HPP
 
 #include <GPS.hpp>
 
-class EVAM8M : public Gps {
+class MT3339 : public Gps {
 public:
-  EVAM8M();
+  MT3339();
 
   void begin(SerialPort &uart);
 
@@ -77,4 +77,4 @@ private:
   static void NMEAReceived(void *);
 };
 
-#endif //EVAM8M_HPP
+#endif //MT3339_HPP

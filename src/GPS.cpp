@@ -33,7 +33,7 @@ void Gps::onReadDone(void (*func)(uint8_t fixQuality,
                                   uint8_t hour,
                                   uint8_t minute,
                                   uint8_t sec,
-                                  uint8_t subsec,
+                                  uint16_t subsec,
                                   int32_t latitude,
                                   int32_t longitude,
                                   int32_t altitude,
@@ -58,7 +58,7 @@ uint8_t Gps::ParseGGA(const char *msg,
                       uint8_t *hour,
                       uint8_t *minute,
                       uint8_t *sec,
-                      uint8_t *subsec,
+                      uint16_t *subsec,
                       int32_t *latitude,
                       int32_t *longitude,
                       uint8_t *numSat,
@@ -111,7 +111,7 @@ uint8_t Gps::ParseGGA(const char *msg,
 
   /* Sub-seconds field. */
   len = CopyStringUntil(buf, msg, ',', sizeof(buf));
-  if (len != 2) {
+  if (len > 3) {
     return 0;
   }
   msg += len + 1;

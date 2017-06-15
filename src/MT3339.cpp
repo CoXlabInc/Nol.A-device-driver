@@ -57,7 +57,6 @@ void MT3339::NMEAReceived(void *ctx) {
     received++;
   }
 
-  printf("%s\n", received);
   if (memcmp(received, "$GPGGA", 6) == 0) {
     uint8_t fixQuality, hour = 0xFF, minute = 0xFF, sec = 0xFF, numSatellites = 0;
     uint16_t subsec = 0xFFFF;

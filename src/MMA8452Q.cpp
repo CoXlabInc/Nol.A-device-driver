@@ -44,10 +44,6 @@ void MMA8452Q::begin(TwoWire &w, uint8_t addr, int8_t pinInt1, int8_t pinInt2) {
   }
 }
 
-void MMA8452Q::begin(TwoWire &wire, uint8_t addr) {
-  begin(wire, addr, -1, -1);
-};
-
 uint8_t MMA8452Q::readSensorId() {
   return read(REG_WHO_AM_I);
 }

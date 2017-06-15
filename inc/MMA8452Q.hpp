@@ -34,8 +34,7 @@
 
 class MMA8452Q {
 public:
-  void begin(TwoWire &wire, uint8_t addr, int8_t pinInt1, int8_t pinInt2);
-  void begin(TwoWire &wire, uint8_t addr);
+  void begin(TwoWire &wire, uint8_t addr, int8_t pinInt1 = -1, int8_t pinInt2 = -1);
 
   uint8_t readSensorId();
   void readXYZ(int16_t *x, int16_t *y, int16_t *z);

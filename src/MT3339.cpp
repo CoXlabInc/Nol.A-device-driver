@@ -30,8 +30,9 @@
 #include "MT3339.hpp"
 #include <cox.h>
 
-MT3339::MT3339()
-  : gsaOpMode('\0'),
+MT3339::MT3339(SerialPort &uart)
+  : Uart(uart),
+    gsaOpMode('\0'),
     gsaNavMode(0),
     gsaPDoP(99.99),
     gsaHDoP(99.99),
@@ -39,13 +40,11 @@ MT3339::MT3339()
     gsaParser(NULL) {
 }
 
-void MT3339::begin(SerialPort &uart) {
-  this->uart = &uart;
-
-  uart.begin(9600);
-  uart.onReceive(NMEAReceived, this);
-  uart.input(this->buf, 254, '\r');
-  uart.stopListening();
+void MT3339::begin() {
+  Uart.begin(9600);
+  Uart.onReceive(NMEAReceived, this);
+  Uart.input(this->buf, 254, '\r');
+  Uart.stopListening();
 }
 
 void MT3339::NMEAReceived(void *ctx) {
@@ -87,19 +86,19 @@ void MT3339::NMEAReceived(void *ctx) {
     }
   }
 
-  gps->uart->input(gps->buf, 254, '\r');
+  gps->Uart.input(gps->buf, 254, '\r');
 }
 
 void MT3339::turnOn() {
-  uart->listen();
+  Uart.listen();
 }
 
 void MT3339::turnOff() {
-  uart->stopListening();
+  Uart.stopListening();
 }
 
 bool MT3339::isOn() {
-  return uart->isListening();
+  return Uart.isListening();
 }
 
 void MT3339::useGSA() {

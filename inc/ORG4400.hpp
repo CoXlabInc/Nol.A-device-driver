@@ -34,7 +34,9 @@
 
 class ORG4400 : public Gps {
 public:
-  void begin(SerialPort &uart, uint8_t pinOnOff, uint8_t pinWakeup);
+  ORG4400(SerialPort &uart, int8_t pinOnOff, int8_t pinWakeup);
+
+  void begin();
 
   void onReadDone(void (*func)(int32_t latitude,
                                int32_t longitude,
@@ -48,9 +50,9 @@ public:
   bool isOn();
 
 private:
-  SerialPort *uart;
-  uint8_t pinOnOff;
-  uint8_t pinWakeup;
+  SerialPort &Uart;
+  const int8_t PinOnOff;
+  const int8_t PinWakeup;
 
   char buf[255];
 

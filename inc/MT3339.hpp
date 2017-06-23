@@ -34,9 +34,9 @@
 
 class MT3339 : public Gps {
 public:
-  MT3339();
+  MT3339(SerialPort &uart);
 
-  void begin(SerialPort &uart);
+  void begin();
 
   void turnOn();
 
@@ -57,7 +57,7 @@ public:
   float getGsaVDoP();
 
 private:
-  SerialPort *uart;
+  SerialPort &Uart;
 
   char buf[255];
 

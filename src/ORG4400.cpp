@@ -30,22 +30,22 @@
 #include "ORG4400.hpp"
 #include <cox.h>
 
-void ORG4400::begin(SerialPort &uart, uint8_t pinOnOff, uint8_t pinWakeup) {
-  this->uart = &uart;
-  this->pinOnOff = pinOnOff;
-  this->pinWakeup = pinWakeup;
+ORG4400::ORG4400(SerialPort &uart, int8_t pinOnOff, int8_t pinWakeup)
+  : Uart(uart), PinOnOff(pinOnOff), PinWakeup(pinWakeup) {
+}
 
-  uart.begin(4800);
-  uart.onReceive(NMEAReceived, this);
+void ORG4400::begin() {
+  Uart.begin(4800);
+  Uart.onReceive(NMEAReceived, this);
 
-  pinMode(pinOnOff, OUTPUT);
-  digitalWrite(pinOnOff, LOW);
+  pinMode(PinOnOff, OUTPUT);
+  digitalWrite(PinOnOff, LOW);
 
-  pinMode(pinWakeup, INPUT);
+  pinMode(PinWakeup, INPUT);
 
   if (isOn()) {
-    this->uart->input(this->buf, 254, '\r');
-    this->uart->listen();
+    Uart.input(this->buf, 254, '\r');
+    Uart.listen();
   }
 }
 
@@ -105,7 +105,7 @@ void ORG4400::NMEAReceived(void *ctx) {
     }
   } while(0);
 
-  gps->uart->input(gps->buf, 254, '\r');
+  gps->Uart.input(gps->buf, 254, '\r');
 }
 
 void ORG4400::onReadDone(void (*func)(int32_t, int32_t, int32_t, uint8_t)) {
@@ -116,12 +116,12 @@ void ORG4400::turnOn() {
   if (isOn())
     return;
 
-  this->uart->listen();
-  this->uart->input(this->buf, 254, '\r');
+  Uart.listen();
+  Uart.input(this->buf, 254, '\r');
 
-  digitalWrite(this->pinOnOff, HIGH);
+  digitalWrite(this->PinOnOff, HIGH);
   delayMicroseconds(110);
-  digitalWrite(this->pinOnOff, LOW);
+  digitalWrite(this->PinOnOff, LOW);
   delayMicroseconds(110);
 }
 
@@ -129,15 +129,15 @@ void ORG4400::turnOff() {
   if (isOn() == false)
     return;
 
-  digitalWrite(this->pinOnOff, HIGH);
+  digitalWrite(this->PinOnOff, HIGH);
   delayMicroseconds(110);
-  digitalWrite(this->pinOnOff, LOW);
+  digitalWrite(this->PinOnOff, LOW);
   delayMicroseconds(110);
 
-  this->uart->stopInput();
-  this->uart->stopListening();
+  Uart.stopInput();
+  Uart.stopListening();
 }
 
 bool ORG4400::isOn() {
-  return (digitalRead(this->pinWakeup) == HIGH) ? true : false;
+  return (digitalRead(this->PinWakeup) == HIGH) ? true : false;
 }

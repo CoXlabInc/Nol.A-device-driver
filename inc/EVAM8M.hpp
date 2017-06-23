@@ -34,9 +34,9 @@
 
 class EVAM8M : public Gps {
 public:
-  EVAM8M();
+  EVAM8M(SerialPort &uart);
 
-  void begin(SerialPort &uart);
+  void begin();
 
   void turnOn();
 
@@ -57,7 +57,7 @@ public:
   float getGsaVDoP();
 
 private:
-  SerialPort *uart;
+  SerialPort &Uart;
 
   char buf[255];
 

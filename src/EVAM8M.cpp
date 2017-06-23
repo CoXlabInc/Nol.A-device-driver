@@ -30,8 +30,9 @@
 #include "EVAM8M.hpp"
 #include <cox.h>
 
-EVAM8M::EVAM8M()
-  : gsaOpMode('\0'),
+EVAM8M::EVAM8M(SerialPort &uart)
+  : Uart(uart),
+    gsaOpMode('\0'),
     gsaNavMode(0),
     gsaPDoP(99.99),
     gsaHDoP(99.99),
@@ -39,13 +40,11 @@ EVAM8M::EVAM8M()
     gsaParser(NULL) {
 }
 
-void EVAM8M::begin(SerialPort &uart) {
-  this->uart = &uart;
-
-  uart.begin(9600);
-  uart.onReceive(NMEAReceived, this);
-  uart.input(this->buf, 254, '\r');
-  uart.stopListening();
+void EVAM8M::begin() {
+  Uart.begin(9600);
+  Uart.onReceive(NMEAReceived, this);
+  Uart.input(this->buf, 254, '\r');
+  Uart.stopListening();
 }
 
 void EVAM8M::NMEAReceived(void *ctx) {
@@ -87,19 +86,19 @@ void EVAM8M::NMEAReceived(void *ctx) {
     }
   }
 
-  gps->uart->input(gps->buf, 254, '\r');
+  gps->Uart.input(gps->buf, 254, '\r');
 }
 
 void EVAM8M::turnOn() {
-  uart->listen();
+  Uart.listen();
 }
 
 void EVAM8M::turnOff() {
-  uart->stopListening();
+  Uart.stopListening();
 }
 
 bool EVAM8M::isOn() {
-  return uart->isListening();
+  return Uart.isListening();
 }
 
 void EVAM8M::useGSA() {

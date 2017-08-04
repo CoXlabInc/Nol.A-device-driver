@@ -42,14 +42,16 @@
 #define LCD_NOBACKLIGHT 0x00
 
 #define En 0x04 // Enable bit
-#define Rw 0x02  // Read/Write bit
-#define Rs 0x01  // Register select bit
+#define Rw 0x02 // Read/Write bit
+#define Rs 0x01 // Register select bit
 
-class I2CIOExpander {
+class LCD1602 {
 public:
-  I2CIOExpander(TwoWire &wire);
-  void digitalWrite(int8_t, int8_t);
+  LCD1602(TwoWire &wire);
+
   int8_t digitalRead(int8_t);
+
+  void digitalWrite(int8_t, int8_t);
   void digitalToggle(int8_t);
   void begin(uint8_t addr, uint8_t charsize = LCD_5x8DOTS );
   void print(const char*);
@@ -59,12 +61,14 @@ public:
   void setline();
 
 private:
-TwoWire &wire;
+  TwoWire &wire;
+
   void init_priv();
   void send(uint8_t, uint8_t);
   void write4bits(uint8_t);
   void expanderWrite(uint8_t);
   void pulseEnable(uint8_t);
+
   uint8_t _Addr;
   uint8_t _displaycontrol;
   uint8_t _backlightval;

@@ -1,4 +1,4 @@
-#include "TM1637Display.h"
+#include "TM1637Display.hpp"
 #include "cox.h"
 
 #define TM1637_I2C_COMM1    0x40

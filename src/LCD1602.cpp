@@ -22,7 +22,7 @@ void LCD1602::begin(uint8_t lcd_Addr, uint8_t dotsize){
   //function set
   write4bits(0x02 << 4);
   command(0x28);            // Function set
-  command(0x0F);            // Display on/off control
+  command(0x0C);            // Display on/off control
   command(0x04);            // Entry mode set
   backlight();              // backlight on
   command(0x01);            // Clear display
@@ -75,9 +75,21 @@ void LCD1602::print(const char c[]){
     send(c[i],Rs);
   }
 }
-void LCD1602::backlight(void) {
+void LCD1602::backlight(void){
   //backlight on
   _backlightval=LCD_BACKLIGHT;
 
   expanderWrite(0);
+}
+
+void LCD1602::clear(void){
+  //data clear & cursor goes to the home
+  command(0x01);
+  delayMicroseconds(2000);
+}
+
+void LCD1602::home(void){
+  //data remains & cursor goes to the home
+  command(0x02);
+  delayMicroseconds(2000);
 }

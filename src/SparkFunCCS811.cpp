@@ -5,7 +5,7 @@ CCS811Core::CCS811Core( uint8_t inputArg ) : I2CAddress(inputArg){}
 
 CCS811Core::status CCS811Core::readRegister(uint8_t offset, uint8_t* outputPointer){
 	//Return value
-	uint8_t result;
+	uint8_t result=0;
 	uint8_t numBytes = 1;
 
 	Wire.beginTransmission(I2CAddress);
@@ -86,17 +86,10 @@ CCS811::CCS811( uint8_t inputArg ) : CCS811Core( inputArg ){
 
 
 CCS811Core::status CCS811::begin( void ){
-	refResistance = 10000;
-	resistance = 0;
-	temperature = 0;
-	tVOC = 0;
-	CO2 = 0;
 	//Reset key
 	uint8_t data[4] = {0x11,0xE5,0x72,0x8A};
 
 	multiWriteRegister(CSS811_SW_RESET, data, 4);
-
-	volatile uint8_t temp = 0;
 
 	delay(20);
 	//Write 0 bytes to this register to start app
@@ -104,7 +97,7 @@ CCS811Core::status CCS811::begin( void ){
 	Wire.write(CSS811_APP_START);
 	Wire.endTransmission();
 	//Read every second
-	CCS811Core::status returnError = setDriveMode(1);
+	setDriveMode(1);
 
 	return SENSOR_SUCCESS;
 }
@@ -112,7 +105,6 @@ CCS811Core::status CCS811::begin( void ){
 CCS811Core::status CCS811::readAlgorithmResults( void ){
 	uint8_t data[4];
 	uint8_t i = 0;
-	uint8_t c = 0;
 	//Set the address
 	Wire.beginTransmission(I2CAddress);
 	Wire.write(CSS811_ALG_RESULT_DATA);

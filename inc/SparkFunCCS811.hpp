@@ -35,7 +35,6 @@ public:
 	status writeRegister(uint8_t offset, uint8_t dataToWrite);
 	status multiWriteRegister(uint8_t offset, uint8_t *inputPointer, uint8_t length);
 
-
 protected:
 	uint8_t I2CAddress;
 };
@@ -52,6 +51,11 @@ public:
 
 	uint16_t getTVOC( void );
 	uint16_t getCO2( void );
+
+private:
+	float refResistance;
+	float resistance;
+	float temperature;
 	uint16_t tVOC;
 	uint16_t CO2;
 };

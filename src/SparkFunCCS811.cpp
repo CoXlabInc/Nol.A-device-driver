@@ -36,10 +36,10 @@ CCS811Core::status CCS811Core::multiReadRegister(uint8_t offset, uint8_t *output
 	while ( (Wire.available()) && (i < length)){
 	// slave may send less than requested
 	// receive a byte as character
-			c = Wire.read();
-			*outputPointer = c;
-			outputPointer++;
-			i++;
+		c = Wire.read();
+		*outputPointer = c;
+		outputPointer++;
+		i++;
 	}
 	return SENSOR_SUCCESS;
 }
@@ -111,8 +111,8 @@ CCS811Core::status CCS811::readAlgorithmResults( void ){
 	Wire.endTransmission();
 	Wire.requestFrom(I2CAddress, 4);
 	while (  i < 4){
-			data[i] = Wire.read();
-			i++;
+		data[i] = Wire.read();
+		i++;
 	}
 	// data : co2MSB, co2LSB, tvocMSB, tvocLSB
 	CO2  = ((uint16_t)data[0] << 8) | data[1];

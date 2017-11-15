@@ -80,22 +80,21 @@ void HTU20D::DelayDone(void *ctx) {
     uint16_t sTemp = sensor->wire->read() << 8;
     sTemp |= sensor->wire->read();
     sensor->wire->read(); //checksum
+    sensor->state = IDLE;
 
     if (sensor->callbackTemperature) {
       sensor->callbackTemperature(17572ul * sTemp / 65536ul - 4685);
     }
 
-    sensor->state = IDLE;
-
   } else if (sensor->state == READ_HUMIDITY) {
     uint16_t sRH = sensor->wire->read() << 8;
     sRH |= sensor->wire->read();
     sensor->wire->read(); //checksum
+    sensor->state = IDLE;
 
     if (sensor->callbackHumidity) {
       sensor->callbackHumidity(12500ul * sRH / 65536ul - 6);
     }
 
-    sensor->state = IDLE;
   }
 }

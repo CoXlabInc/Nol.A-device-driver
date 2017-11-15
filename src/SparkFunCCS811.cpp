@@ -1,21 +1,22 @@
 #include "SparkFunCCS811.hpp"
 #include "cox.h"
 
-CCS811Core::CCS811Core( uint8_t inputArg ) : I2CAddress(inputArg){}
+CCS811Core::CCS811Core(TwoWire &W, uint8_t addr) : Wire(W), I2CAddress(addr) {
+}
 
 CCS811Core::status CCS811Core::readRegister(uint8_t offset, uint8_t* outputPointer){
 	//Return value
 	uint8_t result=0;
 	uint8_t numBytes = 1;
 
-	Wire.beginTransmission(I2CAddress);
-	Wire.write(offset);
-	Wire.endTransmission();
+	this->Wire.beginTransmission(I2CAddress);
+	this->Wire.write(offset);
+	this->Wire.endTransmission();
 	// slave may send less than requeste
 	// receive a byte as a proper uint8_t
-	Wire.requestFrom(I2CAddress, numBytes);
-	while( Wire.available() ){
-		result = Wire.read();
+	this->Wire.requestFrom(I2CAddress, numBytes);
+	while(this->Wire.available()){
+		result = this->Wire.read();
 	}
 	*outputPointer = result;
 
@@ -28,15 +29,15 @@ CCS811Core::status CCS811Core::multiReadRegister(uint8_t offset, uint8_t *output
 	uint8_t i = 0;
 	uint8_t c = 0;
 	//Set the address
-	Wire.beginTransmission(I2CAddress);
-	Wire.write(offset);
-	Wire.endTransmission();
+	this->Wire.beginTransmission(I2CAddress);
+	this->Wire.write(offset);
+	this->Wire.endTransmission();
 	// request 6 bytes from slave device
-	Wire.requestFrom(I2CAddress, 4);
-	while ( (Wire.available()) && (i < length)){
+	this->Wire.requestFrom(I2CAddress, 4);
+	while ((this->Wire.available()) && (i < length)){
 	// slave may send less than requested
 	// receive a byte as character
-		c = Wire.read();
+		c = this->Wire.read();
 		*outputPointer = c;
 		outputPointer++;
 		i++;
@@ -48,10 +49,10 @@ CCS811Core::status CCS811Core::multiReadRegister(uint8_t offset, uint8_t *output
 CCS811Core::status CCS811Core::writeRegister(uint8_t offset, uint8_t dataToWrite) {
 	//offset -- register to write
 	//dataToWrite -- 8 bit data to write to register
-	Wire.beginTransmission(I2CAddress);
-	Wire.write(offset);
-	Wire.write(dataToWrite);
-	Wire.endTransmission();
+	this->Wire.beginTransmission(I2CAddress);
+	this->Wire.write(offset);
+	this->Wire.write(dataToWrite);
+	this->Wire.endTransmission();
 
 	return SENSOR_SUCCESS;
 }
@@ -63,20 +64,20 @@ CCS811Core::status CCS811Core::multiWriteRegister(uint8_t offset, uint8_t *input
 	//define pointer that will point to the external space
 	uint8_t i = 0;
 	//Set the address
-	Wire.beginTransmission(I2CAddress);
-	Wire.write(offset);
+	this->Wire.beginTransmission(I2CAddress);
+	this->Wire.write(offset);
 	// receive a byte as character
 	while ( i < length ){
-		Wire.write(*inputPointer);
+		this->Wire.write(*inputPointer);
 		inputPointer++;
 		i++;
 	}
-	Wire.endTransmission();
+	this->Wire.endTransmission();
 
 	return SENSOR_SUCCESS;
 }
 
-CCS811::CCS811( uint8_t inputArg ) : CCS811Core( inputArg ){
+CCS811::CCS811(TwoWire &W, uint8_t addr) : CCS811Core(W, addr){
 	refResistance = 10000;
 	resistance = 0;
 	temperature = 0;
@@ -93,9 +94,9 @@ CCS811Core::status CCS811::begin( void ){
 
 	delay(20);
 	//Write 0 bytes to this register to start app
-	Wire.beginTransmission(I2CAddress);
-	Wire.write(CSS811_APP_START);
-	Wire.endTransmission();
+	this->Wire.beginTransmission(I2CAddress);
+	this->Wire.write(CSS811_APP_START);
+	this->Wire.endTransmission();
 	//Read every second
 	setDriveMode(1);
 
@@ -106,12 +107,12 @@ CCS811Core::status CCS811::readAlgorithmResults( void ){
 	uint8_t data[4];
 	uint8_t i = 0;
 	//Set the address
-	Wire.beginTransmission(I2CAddress);
-	Wire.write(CSS811_ALG_RESULT_DATA);
-	Wire.endTransmission();
-	Wire.requestFrom(I2CAddress, 4);
+	this->Wire.beginTransmission(I2CAddress);
+	this->Wire.write(CSS811_ALG_RESULT_DATA);
+	this->Wire.endTransmission();
+	this->Wire.requestFrom(I2CAddress, 4);
 	while (  i < 4){
-		data[i] = Wire.read();
+		data[i] = this->Wire.read();
 		i++;
 	}
 	// data : co2MSB, co2LSB, tvocMSB, tvocLSB

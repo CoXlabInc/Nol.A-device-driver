@@ -27,7 +27,7 @@ public:
 		SENSOR_GENERIC_ERROR
 	}status;
 
-	CCS811Core( uint8_t );
+	CCS811Core(TwoWire &, uint8_t addr);
 	~CCS811Core() = default;
 	status beginCore( void );
 	status readRegister( uint8_t offset, uint8_t* outputPointer);
@@ -36,12 +36,13 @@ public:
 	status multiWriteRegister(uint8_t offset, uint8_t *inputPointer, uint8_t length);
 
 protected:
+	TwoWire &Wire;
 	uint8_t I2CAddress;
 };
 
 class CCS811: public CCS811Core{
 public:
-	CCS811( uint8_t );
+	CCS811(TwoWire &, uint8_t addr);
 
 	status begin( void );
 	status setDriveMode( uint8_t mode );

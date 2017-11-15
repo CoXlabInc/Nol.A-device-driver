@@ -59,6 +59,8 @@ public:
   void backlight();
   void command(uint8_t);
   void setline();
+  void clear();
+  void home();
 
 private:
   TwoWire &wire;

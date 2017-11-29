@@ -30,14 +30,17 @@
 #include "EVAM8M.hpp"
 #include <cox.h>
 
-EVAM8M::EVAM8M(SerialPort &uart)
-  : Uart(uart),
-    gsaOpMode('\0'),
-    gsaNavMode(0),
-    gsaPDoP(99.99),
-    gsaHDoP(99.99),
-    gsaVDoP(99.99),
-    gsaParser(NULL) {
+EVAM8M::EVAM8M(SerialPort &uart) :
+Uart(uart),
+gsaOpMode('\0'),
+gsaNavMode(0),
+gsaPDoP(99.99),
+gsaHDoP(99.99),
+gsaVDoP(99.99),
+rmcSpd(0),
+rmcCog(0),
+gsaParser(NULL),
+rmcParser(NULL) {
 }
 
 void EVAM8M::begin() {
@@ -84,6 +87,13 @@ void EVAM8M::NMEAReceived(void *ctx) {
       gps->gsaHDoP = hdop;
       gps->gsaVDoP = vdop;
     }
+  } else if (gps->rmcParser != NULL && memcmp(received, "$GNRMC", 6) == 0) {
+    float spd, cog;
+
+    if (gps->rmcParser(received, &spd, &cog)) {
+      gps->rmcSpd = spd;
+      gps->rmcCog = cog;
+    }
   }
 
   gps->Uart.input(gps->buf, 254, '\r');
@@ -123,4 +133,16 @@ float EVAM8M::getGsaHDoP() {
 
 float EVAM8M::getGsaVDoP() {
   return this->gsaVDoP;
+}
+
+void EVAM8M::useRMC() {
+  this->rmcParser = ParseRMC;
+}
+
+float EVAM8M::getRmcSpeedOverGround() {
+  return this->rmcSpd;
+}
+
+float EVAM8M::getRmcCourseOverGround() {
+  return this->rmcCog;
 }

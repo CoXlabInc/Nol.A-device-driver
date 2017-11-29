@@ -439,3 +439,111 @@ bool Gps::ParseGSA(const char *msg,
 
   return true;
 }
+
+bool Gps::ParseRMC(
+  const char *msg,
+  float *spd,
+  float *cog
+) {
+  uint8_t len;
+  char buf[100];
+
+  // char TEST[] = "$GPRMC,083559.00,A,4717.11437,N,00833.91522,E,0.004,77.52,091202,,,A,V*57";
+  // msg = TEST;
+
+  // printf("%s():%s\n", __func__, msg);
+
+  if (*msg != '$') {
+    return false;
+  }
+
+  /* Find the first comma. */
+  len = CopyStringUntil(buf, msg, ',', sizeof(buf));
+  msg += len + 1;
+
+  /* time: hhmmss.ss (skip) */
+  len = CopyStringUntil(buf, msg, ',', sizeof(buf));
+  if (len == 0 || len >= sizeof(buf)) {
+    return false;
+  }
+  msg += len + 1;
+
+  /* status */
+  len = CopyStringUntil(buf, msg, ',', sizeof(buf));
+  if (len != 1 || buf[0] != 'V') {
+    return false;
+  }
+  msg += len + 1;
+
+  /* lat: ddmm.mmmmm (skip) */
+  len = CopyStringUntil(buf, msg, ',', sizeof(buf));
+  if (len == 0 || len >= sizeof(buf)) {
+    return false;
+  }
+  msg += len + 1;
+
+  /* NS (skip) */
+  len = CopyStringUntil(buf, msg, '.', sizeof(buf));
+  if (len == 0 || len >= sizeof(buf)) {
+    return false;
+  }
+  msg += len + 1;
+
+  /* long: dddmm.mmmmm (skip) */
+  len = CopyStringUntil(buf, msg, ',', sizeof(buf));
+  if (len == 0 || len >= sizeof(buf)) {
+    return false;
+  }
+  msg += len + 1;
+
+  /* NS (skip) */
+  len = CopyStringUntil(buf, msg, '.', sizeof(buf));
+  if (len == 0 || len >= sizeof(buf)) {
+    return false;
+  }
+  msg += len + 1;
+
+  /* spd */
+  len = CopyStringUntil(buf, msg, '.', sizeof(buf));
+  msg += len + 1;
+
+  if (spd) {
+    *spd = strtoul(buf, NULL, 10);
+  }
+
+  len = CopyStringUntil(buf, msg, ',', sizeof(buf));
+  msg += len + 1;
+
+  if (spd) {
+    float m = (float) strtoul(buf, NULL, 10);
+
+    while (len-- > 0) {
+      m /= 10.;
+    }
+
+    *spd += m;
+  }
+
+  /* cog */
+  len = CopyStringUntil(buf, msg, '.', sizeof(buf));
+  msg += len + 1;
+
+  if (cog) {
+    *cog = strtoul(buf, NULL, 10);
+  }
+
+  len = CopyStringUntil(buf, msg, ',', sizeof(buf));
+  msg += len + 1;
+
+  if (cog) {
+    float m = (float) strtoul(buf, NULL, 10);
+
+    while (len-- > 0) {
+      m /= 10.;
+    }
+
+    *cog += m;
+  }
+
+  return true;
+}

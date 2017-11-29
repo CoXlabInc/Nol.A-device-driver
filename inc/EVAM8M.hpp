@@ -56,6 +56,12 @@ public:
 
   float getGsaVDoP();
 
+  void useRMC();
+
+  float getRmcSpeedOverGround();
+
+  float getRmcCourseOverGround();
+
 private:
   SerialPort &Uart;
 
@@ -66,13 +72,23 @@ private:
   float gsaPDoP;
   float gsaHDoP;
   float gsaVDoP;
+  float rmcSpd;
+  float rmcCog;
 
-  bool (*gsaParser)(const char *msg,
-                    char *opMode,
-                    uint8_t *navMode,
-                    float *pdop,
-                    float *hdop,
-                    float *vdop);
+  bool (*gsaParser)(
+    const char *msg,
+    char *opMode,
+    uint8_t *navMode,
+    float *pdop,
+    float *hdop,
+    float *vdop
+  );
+
+  bool (*rmcParser)(
+    const char *msg,
+    float *spd,
+    float *cog
+  );
 
   static void NMEAReceived(void *);
 };

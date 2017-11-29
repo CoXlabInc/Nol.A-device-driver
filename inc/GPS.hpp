@@ -34,15 +34,19 @@
 
 class Gps {
 public:
-  void onReadDone(void (*func)( uint8_t fixQuality,
-                                uint8_t hour,
-                                uint8_t minute,
-                                uint8_t sec,
-                                uint16_t subsec,
-                                int32_t latitude,
-                                int32_t longitude,
-                                int32_t altitude,
-                                uint8_t numSatellites));
+  void onReadDone(
+    void (*func)(
+      uint8_t fixQuality,
+      uint8_t hour,
+      uint8_t minute,
+      uint8_t sec,
+      uint16_t subsec,
+      int32_t latitude,
+      int32_t longitude,
+      int32_t altitude,
+      uint8_t numSatellites
+    )
+  );
 
   virtual void turnOn() = 0;
 
@@ -60,42 +64,56 @@ protected:
               * 5: RTK float solution
               * 6: Estimated (DR) fix
   */
-  static uint8_t ParseGGA(const char *msg,
-                          uint8_t *hour,
-                          uint8_t *minute,
-                          uint8_t *sec,
-                          uint16_t *subsec,
-                          int32_t *latitude,
-                          int32_t *longitude,
-                          uint8_t *numSat,
-                          char *strHDOP,
-                          int32_t *altitude,
-                          int32_t *sep,
-                          int32_t *diffAge,
-                          int32_t *diffStation);
+  static uint8_t ParseGGA(
+    const char *msg,
+    uint8_t *hour,
+    uint8_t *minute,
+    uint8_t *sec,
+    uint16_t *subsec,
+    int32_t *latitude,
+    int32_t *longitude,
+    uint8_t *numSat,
+    char *strHDOP,
+    int32_t *altitude,
+    int32_t *sep,
+    int32_t *diffAge,
+    int32_t *diffStation
+  );
 
-  static bool ParseGSA(const char *msg,
-                       char *opMode,
-                       uint8_t *navMode,
-                       float *pdop,
-                       float *hdop,
-                       float *vdop);
+  static bool ParseGSA(
+    const char *msg,
+    char *opMode,
+    uint8_t *navMode,
+    float *pdop,
+    float *hdop,
+    float *vdop
+  );
 
-  void (*callbackRead)(uint8_t fixQuality,
-                       uint8_t hour,
-                       uint8_t minute,
-                       uint8_t sec,
-                       uint16_t subsec,
-                       int32_t latitude,
-                       int32_t longitude,
-                       int32_t altitude,
-                       uint8_t numSatellites);
+  static bool ParseRMC(
+    const char *msg,
+    float *spd,
+    float *cog
+  );
+
+  void (*callbackRead)(
+    uint8_t fixQuality,
+    uint8_t hour,
+    uint8_t minute,
+    uint8_t sec,
+    uint16_t subsec,
+    int32_t latitude,
+    int32_t longitude,
+    int32_t altitude,
+    uint8_t numSatellites
+  );
 
 private:
-  static uint8_t CopyStringUntil(char *dst,
-                                 const char *src,
-                                 char terminator,
-                                 uint8_t maxLength);
+  static uint8_t CopyStringUntil(
+    char *dst,
+    const char *src,
+    char terminator,
+    uint8_t maxLength
+  );
 };
 
 #endif //GPS_HPP

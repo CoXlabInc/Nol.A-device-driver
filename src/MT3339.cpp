@@ -30,14 +30,17 @@
 #include "MT3339.hpp"
 #include <cox.h>
 
-MT3339::MT3339(SerialPort &uart)
-  : Uart(uart),
-    gsaOpMode('\0'),
-    gsaNavMode(0),
-    gsaPDoP(99.99),
-    gsaHDoP(99.99),
-    gsaVDoP(99.99),
-    gsaParser(NULL) {
+MT3339::MT3339(SerialPort &uart) :
+Uart(uart),
+gsaOpMode('\0'),
+gsaNavMode(0),
+gsaPDoP(99.99),
+gsaHDoP(99.99),
+gsaVDoP(99.99),
+rmcSpd(0),
+rmcCog(0),
+gsaParser(NULL),
+rmcParser(NULL) {
 }
 
 void MT3339::begin() {
@@ -45,6 +48,8 @@ void MT3339::begin() {
   Uart.onReceive(NMEAReceived, this);
   Uart.input(this->buf, 254, '\r');
   Uart.stopListening();
+  useGSA();
+  useRMC();
 }
 
 void MT3339::NMEAReceived(void *ctx) {
@@ -83,6 +88,13 @@ void MT3339::NMEAReceived(void *ctx) {
       gps->gsaPDoP = pdop;
       gps->gsaHDoP = hdop;
       gps->gsaVDoP = vdop;
+    }
+  } else if (gps->rmcParser != NULL && memcmp(received, "$GPRMC", 6) == 0) {
+    float spd, cog;
+
+    if (gps->rmcParser(received, &spd, &cog)) {
+      gps->rmcSpd = spd;
+      gps->rmcCog = cog;
     }
   }
 
@@ -123,4 +135,16 @@ float MT3339::getGsaHDoP() {
 
 float MT3339::getGsaVDoP() {
   return this->gsaVDoP;
+}
+
+void MT3339::useRMC() {
+  this->rmcParser = ParseRMC;
+}
+
+float MT3339::getRmcSpeedOverGround() {
+  return this->rmcSpd;
+}
+
+float MT3339::getRmcCourseOverGround() {
+  return this->rmcCog;
 }

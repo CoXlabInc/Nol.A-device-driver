@@ -48,14 +48,20 @@ POSSIBILITY OF SUCH DAMAGE.
  #define pgm_read_dword(addr) (*(const unsigned long *)(addr))
 #endif
 
+#if (SIZE_OF_POINTER == 4)
+  #define pgm_read_pointer(addr) (/*(void *)*/pgm_read_dword(addr))
+#elif (SIZE_OF_POINTER == 2)
+  #define pgm_read_pointer(addr) (/*(void *)*/pgm_read_word(addr))
+#else
 // Pointers are a peculiar case...typically 16-bit on AVR boards,
 // 32 bits elsewhere.  Try to accommodate both...
-
+#warning "SIZE_OF_POINTER not defined"
 #if !defined(__INT_MAX__) || (__INT_MAX__ > 0xFFFF)
  #define pgm_read_pointer(addr) ((void *)pgm_read_dword(addr))
 #else
  #define pgm_read_pointer(addr) ((void *)pgm_read_word(addr))
 #endif
+#endif //SIZE_OF_POINTER
 
 #ifndef min
 #define min(a,b) (((a) < (b)) ? (a) : (b))
@@ -927,7 +933,7 @@ void Adafruit_GFX::setFont(const GFXfont *f) {
         // Move cursor pos up 6 pixels so it's at top-left of char.
         cursor_y -= 6;
     }
-    gfxFont = (GFXfont *)f;
+    gfxFont = f;
 }
 
 // Broke this out as it's used by both the PROGMEM- and RAM-resident

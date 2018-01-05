@@ -16,6 +16,8 @@ BSD license, check license.txt for more information
 All text above, and the splash screen must be included in any redistribution
 *********************************************************************/
 #include "cox.h"
+#include "SPI.hpp"
+#include "TwoWire.hpp"
 #include "Adafruit_GFX.hpp"
 
 #ifndef _Adafruit_SSD1306_H_

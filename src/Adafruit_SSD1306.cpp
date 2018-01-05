@@ -225,10 +225,10 @@ void Adafruit_SSD1306::ssd1306_command(uint8_t c) {
 
   if(this->wire){
     // I2C
-    Wire.beginTransmission(_i2caddr);
-    Wire.write(0x00);
-    Wire.write(c);
-    Wire.endTransmission();
+    this->wire->beginTransmission(_i2caddr);
+    this->wire->write(0x00);
+    this->wire->write(c);
+    this->wire->endTransmission();
   }
   else if(this->spi){
     // SPI
@@ -352,14 +352,14 @@ void Adafruit_SSD1306::display(void) {
   if(this->wire){
     for (uint16_t i=0; i<(SSD1306_LCDWIDTH*SSD1306_LCDHEIGHT/8); i++) {
       // send a bunch of data in one xmission
-      Wire.beginTransmission(_i2caddr);
-      Wire.write(0x40);
+      this->wire->beginTransmission(_i2caddr);
+      this->wire->write(0x40);
       for (uint8_t x=0; x<16; x++) {
-        Wire.write(buffer[i]);
+        this->wire->write(buffer[i]);
         i++;
       }
       i--;
-      Wire.endTransmission();
+      this->wire->endTransmission();
     }
   }
   else if(this->spi){

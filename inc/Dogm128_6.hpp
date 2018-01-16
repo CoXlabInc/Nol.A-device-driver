@@ -10,7 +10,7 @@
 
 class Dogm128_6 : public Adafruit_GFX{
   public:
-    Dogm128_6(SPI &spi, int8_t lcdPinCs);
+    Dogm128_6(SPI &spi, int8_t lcdPwr, int8_t lcdReset, int8_t lcdPinCs, int8_t lcdMode);
 
     char buffer[1024] = {0x00,};
     uint8_t getRotation(void) const;
@@ -34,6 +34,9 @@ class Dogm128_6 : public Adafruit_GFX{
     SPI *spi = NULL;
     uint8_t accPinCs;
     uint8_t flashPinCs;
+    uint8_t lcdPwr;
+    uint8_t lcdReset;
     uint8_t lcdPinCs;
+    uint8_t lcdMode;
     uint8_t rotation;
 };

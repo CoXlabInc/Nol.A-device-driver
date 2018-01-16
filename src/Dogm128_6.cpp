@@ -6,9 +6,15 @@
 #define swap(a, b) { int16_t t = a; a = b; b = t; }
 
 Dogm128_6::Dogm128_6( SPI &spi,
-                      int8_t lcdPinCs)  : Adafruit_GFX(DOGM128_6_LCDWIDTH,DOGM128_6_LCDHEIGHT),
+                      int8_t lcdPwr,
+                      int8_t lcdReset,
+                      int8_t lcdPinCs,
+                      int8_t lcdMode )  : Adafruit_GFX(DOGM128_6_LCDWIDTH,DOGM128_6_LCDHEIGHT),
                                           spi(&spi),
-                                          lcdPinCs(lcdPinCs){
+                                          lcdPwr(lcdPwr),
+                                          lcdReset(lcdReset),
+                                          lcdPinCs(lcdPinCs),
+                                          lcdMode(lcdMode){
                                             rotation  = 0;
 }
 
@@ -34,59 +40,25 @@ void Dogm128_6::begin(){
       0x00    /*Low-Nibble of column address            */
   };
   //
-  // Initialize LEDs as off (pins as GPIO output high), Active low
+  // LCD IO pins Output as GPIO output high
   //
-  pinMode(LED_1,OUTPUT);
-  pinMode(LED_2,OUTPUT);
-  pinMode(LED_3,OUTPUT);
-  pinMode(LED_4,OUTPUT);
-  digitalWrite(LED_1,HIGH);
-  digitalWrite(LED_2,HIGH);
-  digitalWrite(LED_3,HIGH);
-  digitalWrite(LED_4,HIGH);
+  pinMode(lcdPinCs,OUTPUT);
+  pinMode(lcdPwr,OUTPUT);
+  pinMode(lcdReset,OUTPUT);
+  pinMode(lcdMode,OUTPUT);
   //
-  // LCD CS as GPIO output high
+  // Set BSP_lcdPwr=1,RSTn=0, A0=1, CSn=1 with high drive strength
   //
-  pinMode(LCD_CS_N,OUTPUT);
-  digitalWrite(LCD_CS_N,HIGH);
-  //
-  // Accelerometer + SPI flash CS as GPIO output high, default HIGH
-  //
-  pinMode(ACC_CS_N,OUTPUT);
-  pinMode(FLASH_CS_N,OUTPUT);
-  digitalWrite(ACC_CS_N,HIGH);
-  digitalWrite(FLASH_CS_N,HIGH);
-  //
-  // Hold SPI flash powered up, but in reset (GPIO output high, full drive strength).
-  //
-  pinMode(FLASH_PWR,OUTPUT);
-  digitalWrite(FLASH_PWR,HIGH);
-  pinMode(FLASH_RESET_N,OUTPUT);
-  digitalWrite(FLASH_RESET_N,LOW);
-  digitalWrite(FLASH_RESET_N,HIGH);
-  //
-  // IO pins
-  // Output
-  //
-  pinMode(LCD_PWR,OUTPUT);
-  pinMode(LCD_RESET_N,OUTPUT);
-  pinMode(LCD_MODE,OUTPUT);
-  //
-  // Set BSP_LCD_PWR=1 with high drive strength
-  //
-  digitalWrite(LCD_PWR,HIGH);
-  //
-  // Set RSTn=0, A0=1, CSn=1
-  //
-  digitalWrite(LCD_RESET_N,LOW);
-  digitalWrite(LCD_MODE,HIGH);
-  digitalWrite(LCD_CS_N,HIGH);
+  digitalWrite(lcdPwr,HIGH);
+  digitalWrite(lcdReset,LOW);
+  digitalWrite(lcdMode,HIGH);
+  digitalWrite(lcdPinCs,HIGH);
   //
   // Wait ~ 100 ms (@ 16 MHz) and clear reset
   //
   // __delay_cycles(1600000);
   delay(160);
-  digitalWrite(LCD_RESET_N,HIGH);
+  digitalWrite(lcdReset,HIGH);
   //
   // Send init command sequence
   //
@@ -98,12 +70,11 @@ void Dogm128_6::lcdSendCommand(char *command, uint8_t length){
   // Assert CSn, indicate command (A0 low), send bytes, deassert CSn
   //
   digitalWrite(lcdPinCs,LOW);
-  digitalWrite(LCD_MODE,LOW);
+  digitalWrite(lcdMode,LOW);
 
   this->spi->begin(1000000ul, SPI::MSBFIRST, SPI::MODE2);
 
   while(length--){
-    printf("lcdSendCommand : %d\n",*command );
     this->spi->transfer((uint8_t)*command);
     command++;
   }
@@ -148,7 +119,7 @@ void Dogm128_6::lcdSendData(char *data, uint16_t length){
     // Assert CSn, indicate data (A0 high), send bytes, deassert CSn)
     //
 		digitalWrite(lcdPinCs,LOW);
-		digitalWrite(LCD_MODE,HIGH);
+		digitalWrite(lcdMode,HIGH);
 
 		this->spi->begin(1000000ul, SPI::MSBFIRST, SPI::MODE2);
 

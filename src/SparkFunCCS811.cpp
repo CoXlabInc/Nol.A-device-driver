@@ -88,6 +88,7 @@ CCS811::CCS811(TwoWire &W, uint8_t addr) : CCS811Core(W, addr){
 
 CCS811Core::status CCS811::begin( void ){
 	//Reset key
+	this->Wire.begin();
 	uint8_t data[4] = {0x11,0xE5,0x72,0x8A};
 
 	multiWriteRegister(CSS811_SW_RESET, data, 4);

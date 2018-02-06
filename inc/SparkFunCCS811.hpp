@@ -51,12 +51,14 @@ public:
 	bool dataAvailable( void );
 
 	uint16_t getTVOC( void );
-	uint16_t getCO2( void );
+	uint16_t getCO2e( void );
 
 private:
+	TwoWire &Wire;
+	uint8_t I2CAddress;
 	float refResistance;
 	float resistance;
 	float temperature;
 	uint16_t tVOC;
-	uint16_t CO2;
+	uint16_t CO2e;
 };

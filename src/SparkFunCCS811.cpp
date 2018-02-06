@@ -82,7 +82,7 @@ CCS811::CCS811(TwoWire &W, uint8_t addr) : CCS811Core(W, addr){
 	resistance = 0;
 	temperature = 0;
 	tVOC = 0;
-	CO2 = 0;
+	CO2e = 0;
 }
 
 
@@ -116,8 +116,8 @@ CCS811Core::status CCS811::readAlgorithmResults( void ){
 		data[i] = this->Wire.read();
 		i++;
 	}
-	// data : co2MSB, co2LSB, tvocMSB, tvocLSB
-	CO2  = ((uint16_t)data[0] << 8) | data[1];
+	// data : CO2eMSB, CO2eLSB, tvocMSB, tvocLSB
+	CO2e  = ((uint16_t)data[0] << 8) | data[1];
 	tVOC = ((uint16_t)data[2] << 8) | data[3];
 
 	return SENSOR_SUCCESS;
@@ -148,6 +148,6 @@ uint16_t CCS811::getTVOC( void ){
 	return tVOC;
 }
 
-uint16_t CCS811::getCO2( void ){
-	return CO2;
+uint16_t CCS811::getCO2e( void ){
+	return CO2e;
 }

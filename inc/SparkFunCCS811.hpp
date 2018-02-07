@@ -54,8 +54,6 @@ public:
 	uint16_t getCO2e( void );
 
 private:
-	TwoWire &Wire;
-	uint8_t I2CAddress;
 	float refResistance;
 	float resistance;
 	float temperature;

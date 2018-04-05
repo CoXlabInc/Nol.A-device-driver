@@ -125,6 +125,7 @@ class Adafruit_VS1053_FilePlayer : public Adafruit_VS1053 {
  private:
   void feedBuffer_noLock(void);
   volatile boolean feedBufferLock = false;
+  static void TaskFeeder(void *);
 };
 
 #endif // ADAFRUIT_VS1053_HPP

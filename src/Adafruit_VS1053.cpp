@@ -37,10 +37,21 @@ boolean Adafruit_VS1053_FilePlayer::begin(void) {
   uint8_t v  = Adafruit_VS1053::begin();   
 
   //dumpRegs();
-  //Serial.print("Version = "); Serial.println(v);
-  return (v == 4);
+  // Serial.print("Version = "); Serial.println(v);
+  if (v != 4) {
+    return false;
+  }
+
+  if (_dreq >= 0 &&
+      attachInterrupt(_dreq, TaskFeeder, this, CHANGE) == ERROR_SUCCESS) {
+  } else {
+    //TODO Use Timer.
+  }
 }
 
+void Adafruit_VS1053_FilePlayer::TaskFeeder(void *ctx) {
+  ((Adafruit_VS1053_FilePlayer *) ctx)->feedBuffer();
+}
 
 boolean Adafruit_VS1053_FilePlayer::playFullFile(const char *trackname) {
   if (! startPlayingFile(trackname)) return false;
@@ -95,7 +106,7 @@ boolean Adafruit_VS1053_FilePlayer::startPlayingFile(const char *trackname) {
   }
 
   // don't let the IRQ get triggered by accident here
-  noInterrupts();
+  //noInterrupts();
 
   // As explained in datasheet, set twice 0 in REG_DECODETIME to set time back to 0
   sciWrite(REG_DECODETIME, 0x00);
@@ -105,6 +116,7 @@ boolean Adafruit_VS1053_FilePlayer::startPlayingFile(const char *trackname) {
 
   // wait till its ready for data
   while (! readyForData() ) {
+    System.feedWatchdog();
 #if defined(ESP8266)
 	yield();
 #endif
@@ -112,11 +124,12 @@ boolean Adafruit_VS1053_FilePlayer::startPlayingFile(const char *trackname) {
 
   // fill it up!
   while (playingMusic && readyForData()) {
+    System.feedWatchdog();
     feedBuffer();
   }
   
   // ok going forward, we can use the IRQ
-  interrupts();
+  //interrupts();
 
   return true;
 }
@@ -149,9 +162,11 @@ void Adafruit_VS1053_FilePlayer::feedBuffer_noLock(void) {
 
   // Feed the hungry buffer! :)
   while (readyForData()) {
+    System.feedWatchdog();
+
     // Read some audio data from the SD card file
-    int bytesread = fread(mp3buffer, DATABUFFERLEN, DATABUFFERLEN, currentTrack);
-    
+    int bytesread = fread(mp3buffer, 1, DATABUFFERLEN, currentTrack);
+
     if (bytesread == 0) {
       // must be at the end of the file, wrap it up!
       playingMusic = false;
@@ -210,9 +225,9 @@ uint16_t Adafruit_VS1053::loadPlugin(char *plugname) {
   }
 
   char c;
-  if ((fread(&c, 1, 1, plugin) != 1 || c != 'P') ||
-      (fread(&c, 1, 1, plugin) != 1 || c != '&') ||
-      (fread(&c, 1, 1, plugin) != 1 || c != 'H')) {
+  if (fgetc(plugin) != 'P' ||
+      fgetc(plugin) != '&' ||
+      fgetc(plugin) != 'H') {
     fclose(plugin);
     return 0xFFFF;
   }
@@ -220,7 +235,7 @@ uint16_t Adafruit_VS1053::loadPlugin(char *plugname) {
   uint16_t type;
 
  // Serial.print("Patch size: "); Serial.println(patchsize);
-  while (fread(&c, 1, 1, plugin) == 1 && (type = c) >= 0) {
+  while ((type = fgetc(plugin)) >= 0) {
     uint16_t offsets[] = {0x8000UL, 0x0, 0x4000UL};
     uint16_t addr, len;
 
@@ -231,10 +246,10 @@ uint16_t Adafruit_VS1053::loadPlugin(char *plugname) {
 	return 0xFFFF;
     }
 
-    fread(&c, 1, 1, plugin); len = ((uint16_t) c << 8);
-    fread(&c, 1, 1, plugin); len |= c & ~1;
-    fread(&c, 1, 1, plugin); addr = ((uint16_t) c << 8);
-    fread(&c, 1, 1, plugin); addr |= c;
+    len = ((uint16_t) fgetc(plugin) << 8);
+    len |= fgetc(plugin) & ~1;
+    addr = ((uint16_t) fgetc(plugin) << 8);
+    addr |= fgetc(plugin);
     //Serial.print("len: "); Serial.print(len); 
     //Serial.print(" addr: $"); Serial.println(addr, HEX);
 
@@ -249,8 +264,8 @@ uint16_t Adafruit_VS1053::loadPlugin(char *plugname) {
     // write data
     do {
       uint16_t data;
-      fread(&c, 1, 1, plugin); data = c; data <<= 8;
-      fread(&c, 1, 1, plugin); data |= c;
+      data = ((uint16_t) fgetc(plugin) << 8);
+      data |= fgetc(plugin);
       sciWrite(REG_WRAM, data);
     } while ((len -=2));
   }
@@ -282,15 +297,15 @@ void Adafruit_VS1053::setVolume(uint8_t left, uint8_t right) {
   v <<= 8;
   v |= right;
 
-  noInterrupts(); //cli();
+  //noInterrupts(); //cli();
   sciWrite(REG_VOLUME, v);
-  interrupts();  //sei();
+  //interrupts();  //sei();
 }
 
 uint16_t Adafruit_VS1053::decodeTime() {
-  noInterrupts(); //cli();
+  //noInterrupts(); //cli();
   uint16_t t = sciRead(REG_DECODETIME);
-  interrupts(); //sei();
+  //interrupts(); //sei();
   return t;
 }
 
@@ -332,7 +347,6 @@ uint8_t Adafruit_VS1053::begin(void) {
   pinMode(_dreq, INPUT);
 
   reset();
-
   return (sciRead(REG_STATUS) >> 4) & 0x0F;
 }
 

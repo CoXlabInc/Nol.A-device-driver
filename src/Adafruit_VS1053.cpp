@@ -93,7 +93,7 @@ boolean Adafruit_VS1053_FilePlayer::stopped(void) {
 }
 
 
-boolean Adafruit_VS1053_FilePlayer::startPlayingFile(const char *trackname) {
+boolean Adafruit_VS1053_FilePlayer::startPlayingFile(const char *trackname, void (*func)()) {
   // reset playback
   sciWrite(REG_MODE, MODE_SM_LINE1 | MODE_SM_SDINEW);
   // resync
@@ -131,6 +131,7 @@ boolean Adafruit_VS1053_FilePlayer::startPlayingFile(const char *trackname) {
   // ok going forward, we can use the IRQ
   //interrupts();
 
+  this->callbackPlayDone = func;
   return true;
 }
 
@@ -172,6 +173,9 @@ void Adafruit_VS1053_FilePlayer::feedBuffer_noLock(void) {
       playingMusic = false;
       fclose(currentTrack);
       currentTrack = NULL;
+      if (this->callbackPlayDone) {
+        postTask(TaskCallbackPlayDone, this);
+      }
       break;
     }
 
@@ -179,6 +183,12 @@ void Adafruit_VS1053_FilePlayer::feedBuffer_noLock(void) {
   }
 }
 
+void Adafruit_VS1053_FilePlayer::TaskCallbackPlayDone(void *ctx) {
+  Adafruit_VS1053_FilePlayer *v = (Adafruit_VS1053 *) ctx;
+  if (v->callbackPlayDone) {
+    v->callbackPlayDone();
+  }
+}
 
 /***************************************************************/
 

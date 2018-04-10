@@ -115,7 +115,7 @@ class Adafruit_VS1053_FilePlayer : public Adafruit_VS1053 {
   FILE *currentTrack = NULL;
   volatile boolean playingMusic;
   void feedBuffer(void);
-  boolean startPlayingFile(const char *trackname);
+  boolean startPlayingFile(const char *trackname, void (*func)() = NULL);
   boolean playFullFile(const char *trackname);
   void stopPlaying(void);
   boolean paused(void);
@@ -125,7 +125,9 @@ class Adafruit_VS1053_FilePlayer : public Adafruit_VS1053 {
  private:
   void feedBuffer_noLock(void);
   volatile boolean feedBufferLock = false;
+  void (*callbackPlayDone)() = NULL;
   static void TaskFeeder(void *);
+  static void TaskCallbackPlayDone(void *);
 };
 
 #endif // ADAFRUIT_VS1053_HPP

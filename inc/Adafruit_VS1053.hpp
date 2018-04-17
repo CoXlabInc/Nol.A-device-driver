@@ -19,6 +19,8 @@
 #include <cox.h>
 #include <SPI.hpp>
 
+#if defined(__FILE_defined)
+
 class Adafruit_VS1053 {
  public:
   Adafruit_VS1053(SPI &s, int8_t rst, int8_t cs, int8_t dcs, int8_t dreq);
@@ -130,4 +132,5 @@ class Adafruit_VS1053_FilePlayer : public Adafruit_VS1053 {
   static void TaskCallbackPlayDone(void *);
 };
 
+#endif // __FILE_defined
 #endif // ADAFRUIT_VS1053_HPP

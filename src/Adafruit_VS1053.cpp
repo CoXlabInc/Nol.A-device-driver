@@ -16,6 +16,8 @@
 
 #include <Adafruit_VS1053.hpp>
 
+#if defined(__FILE_defined)
+
 #ifndef _BV
   #define _BV(x) (1<<(x))
 #endif
@@ -37,15 +39,17 @@ boolean Adafruit_VS1053_FilePlayer::begin(void) {
   uint8_t v  = Adafruit_VS1053::begin();   
 
   //dumpRegs();
-  // Serial.print("Version = "); Serial.println(v);
+  // printf("Version = %u\n", v);
   if (v != 4) {
     return false;
   }
 
   if (_dreq >= 0 &&
       attachInterrupt(_dreq, TaskFeeder, this, CHANGE) == ERROR_SUCCESS) {
+    return true;
   } else {
     //TODO Use Timer.
+    return false;
   }
 }
 
@@ -184,7 +188,7 @@ void Adafruit_VS1053_FilePlayer::feedBuffer_noLock(void) {
 }
 
 void Adafruit_VS1053_FilePlayer::TaskCallbackPlayDone(void *ctx) {
-  Adafruit_VS1053_FilePlayer *v = (Adafruit_VS1053 *) ctx;
+  Adafruit_VS1053_FilePlayer *v = (Adafruit_VS1053_FilePlayer *) ctx;
   if (v->callbackPlayDone) {
     v->callbackPlayDone();
   }
@@ -199,7 +203,7 @@ Adafruit_VS1053::Adafruit_VS1053(SPI &s, int8_t rst, int8_t cs, int8_t dcs, int8
 void Adafruit_VS1053::applyPatch(const uint16_t *patch, uint16_t patchsize) {
   uint16_t i = 0;
 
- // Serial.print("Patch size: "); Serial.println(patchsize);
+ // printf("Patch size: %u\n", patchsize);
   while ( i < patchsize ) {
     uint16_t addr, n, val;
 
@@ -207,7 +211,6 @@ void Adafruit_VS1053::applyPatch(const uint16_t *patch, uint16_t patchsize) {
     n = *patch; patch++; //pgm_read_word(patch++);
     i += 2;
 
-    //Serial.println(addr, HEX);
     if (n & 0x8000U) { // RLE run, replicate n samples 
       n &= 0x7FFF;
       val = *patch; patch++; //pgm_read_word(patch++);
@@ -230,7 +233,7 @@ uint16_t Adafruit_VS1053::loadPlugin(char *plugname) {
 
   FILE *plugin = fopen(plugname, "r");
   if (!plugin) {
-    Serial.printf("Couldn't open the plugin file '%s'.\n", plugname);
+    printf("Couldn't open the plugin file '%s'.\n", plugname);
     return 0xFFFF;
   }
 
@@ -244,12 +247,12 @@ uint16_t Adafruit_VS1053::loadPlugin(char *plugname) {
 
   uint16_t type;
 
- // Serial.print("Patch size: "); Serial.println(patchsize);
+ // printf("Patch size: %u\n", patchsize);
   while ((type = fgetc(plugin)) >= 0) {
     uint16_t offsets[] = {0x8000UL, 0x0, 0x4000UL};
     uint16_t addr, len;
 
-    //Serial.print("type: "); Serial.println(type, HEX);
+    //printf("type: 0x%x\n", type);
 
     if (type >= 4) {
         fclose(plugin);
@@ -260,8 +263,8 @@ uint16_t Adafruit_VS1053::loadPlugin(char *plugname) {
     len |= fgetc(plugin) & ~1;
     addr = ((uint16_t) fgetc(plugin) << 8);
     addr |= fgetc(plugin);
-    //Serial.print("len: "); Serial.print(len); 
-    //Serial.print(" addr: $"); Serial.println(addr, HEX);
+    //printf("len: %u\n", len); 
+    //printf(" addr: 0x%x\n", addr);
 
     if (type == 3) {
       // execute rec!
@@ -361,10 +364,10 @@ uint8_t Adafruit_VS1053::begin(void) {
 }
 
 void Adafruit_VS1053::dumpRegs(void) {
-  Serial.print("Mode = 0x"); Serial.println(sciRead(REG_MODE), HEX);
-  Serial.print("Stat = 0x"); Serial.println(sciRead(REG_STATUS), HEX);
-  Serial.print("ClkF = 0x"); Serial.println(sciRead(REG_CLOCKF), HEX);
-  Serial.print("Vol. = 0x"); Serial.println(sciRead(REG_VOLUME), HEX);
+  printf("Mode = 0x%X\n", sciRead(REG_MODE));
+  printf("Stat = 0x%X\n", sciRead(REG_STATUS));
+  printf("ClkF = 0x%X\n", sciRead(REG_CLOCKF));
+  printf("Vol. = 0x%X\n", sciRead(REG_VOLUME));
 }
 
 
@@ -393,7 +396,7 @@ boolean Adafruit_VS1053::prepareRecordOgg(char *plugname) {
 
   int pluginStartAddr = loadPlugin(plugname);
   if (pluginStartAddr == 0xFFFF) return false;
-  Serial.print("Plugin at $"); Serial.println(pluginStartAddr, HEX);
+  printf("Plugin at 0x%X\n", pluginStartAddr);
   if (pluginStartAddr != 0x34) return false;
 
   return true;
@@ -581,3 +584,5 @@ void Adafruit_VS1053::sineTest(uint8_t n, uint16_t ms) {
   digitalWrite(_dcs, HIGH);  
   this->_spi.end();
 }
+
+#endif //__FILE_defined

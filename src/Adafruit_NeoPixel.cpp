@@ -124,7 +124,8 @@ void Adafruit_NeoPixel::show(void) {
     period = System.ClockHz / 400000;
   }
 
-  while (ULONG_MAX - _getCycleCount() < numBytes * period * 8) {
+  while (System.MaxCycleCount - System.getCycleCount() < numBytes * period * 8) {
+    // To avoid time overlap.
     System.feedWatchdog();
   }
 
@@ -136,13 +137,14 @@ void Adafruit_NeoPixel::show(void) {
       t = time0;
     }
 
-    startTime = _getCycleCount();
-
+    startTime = System.getCycleCount();
     digitalWrite(pin, HIGH);
-    while (_getCycleCount() - startTime < t);
+    uint32_t highTime = (startTime + t) & System.MaxCycleCount;
+    while (System.getCycleCount() < highTime);
 
     digitalWrite(pin, LOW);
-    while (_getCycleCount() - startTime < period);
+    uint32_t lowTime = (startTime + period) & System.MaxCycleCount;
+    while (System.getCycleCount() < lowTime);
 
     if(!(mask >>= 1)) {
       if(p >= end) break;

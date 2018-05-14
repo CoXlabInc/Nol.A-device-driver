@@ -29,18 +29,11 @@
 
 #include "PMS3003.hpp"
 
-PMS3003::PMS3003(SerialPort &port, int pinSet, int pinReset) {
-  this->p = &port;
-  this->pinSet = pinSet;
-  this->pinReset = pinReset;
-  this->index = 0;
-  this->high = 0;
-
+PMS3003::PMS3003(SerialPort &port, int pinSet, int pinReset)
+  : p(port), pinSet(pinSet), pinReset(pinReset) {
   for (int i = 0; i < 6; i++) {
     this->measured[i] = -1;
   }
-
-  this->callback = NULL;
 }
 
 void PMS3003::begin() {
@@ -54,14 +47,16 @@ void PMS3003::begin() {
 
   digitalWrite(this->pinSet, HIGH);
 
-  this->p->begin(9600);
-  this->p->onReceive(SerialDataReceived, this);
-  this->p->listen();
+  this->p.begin(9600);
+  this->p.onReceive([](void *ctx) {
+      ((PMS3003 *) ctx)->eventSensorDataReceived();
+    }, this);
+  this->p.listen();
 }
 
 void PMS3003::eventSensorDataReceived() {
-  while (this->p->available() > 0) {
-    uint8_t c = this->p->read();
+  while (this->p.available() > 0) {
+    uint8_t c = this->p.read();
 
     if ((this->index == 0 && c != 0x42) ||
         (this->index == 1 && c != 0x4d)) {
@@ -110,11 +105,6 @@ void PMS3003::eventSensorDataReceived() {
     }
     this->index++;
   }
-}
-
-void PMS3003::SerialDataReceived(void *ctx) {
-  PMS3003 *pms3003 = (PMS3003 *) ctx;
-  pms3003->eventSensorDataReceived();
 }
 
 void PMS3003::onReadDone(void (*func)(int32_t pm1_0_CF1,

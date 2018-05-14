@@ -50,15 +50,14 @@ private:
                    int32_t pm10_0_CF1,
                    int32_t pm1_0_Atmosphere,
                    int32_t pm2_5_Atmosphere,
-                   int32_t pm10_0_Atmosphere);
+                   int32_t pm10_0_Atmosphere) = NULL;
 
-  SerialPort *p;
-  int pinSet, pinReset;
-  uint8_t index, high;
+  SerialPort &p;
+  const int pinSet, pinReset;
+  uint8_t index = 0, high = 0;
   int32_t measured[6];
 
   void eventSensorDataReceived();
-  static void SerialDataReceived(void *ctx);
 };
 
 #endif //PMS3003_HPP

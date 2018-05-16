@@ -1,10 +1,11 @@
 #ifndef _ADAFRUIT_GFX_H
 #define _ADAFRUIT_GFX_H
 
-#include "cox.h"
+#include <cox.h>
 #include "gfxfont.hpp"
+#include <Print.hpp>
 
-class Adafruit_GFX{
+class Adafruit_GFX : public Print {
 
  public:
 
@@ -96,7 +97,7 @@ class Adafruit_GFX{
 
   int16_t height(void) const;
   int16_t width(void) const;
-  void write(uint8_t);
+  size_t write(uint8_t);
   uint8_t getRotation(void) const;
 
   // get current cursor position (get rotation safe maximum values, using: width() for x, height() for y)

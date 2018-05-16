@@ -116,7 +116,7 @@ class Adafruit_SSD1306 : public Adafruit_GFX {
   Adafruit_SSD1306(int8_t pinReset, TwoWire &wire, uint8_t i2caddr);
   Adafruit_SSD1306(int8_t pinReset, SPI &spi, int8_t pinCs);
 
-  void begin(uint8_t i2caddr, bool reset=true);
+  void begin(uint8_t vccstate, bool reset=true);
   void ssd1306_command(uint8_t c);
   void clearDisplay(void);
   void invertDisplay(uint8_t i);

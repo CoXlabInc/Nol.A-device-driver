@@ -19,7 +19,7 @@
 #include <cox.h>
 #include <SPI.hpp>
 
-#if defined(__FILE_defined)
+#ifdef NOLA_FILE_SUPPORTED
 
 class Adafruit_VS1053 {
  public:
@@ -132,5 +132,5 @@ class Adafruit_VS1053_FilePlayer : public Adafruit_VS1053 {
   static void TaskCallbackPlayDone(void *);
 };
 
-#endif // __FILE_defined
+#endif // NOLA_FILE_SUPPORTED
 #endif // ADAFRUIT_VS1053_HPP

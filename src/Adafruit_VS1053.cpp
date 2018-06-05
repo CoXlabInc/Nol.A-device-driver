@@ -16,7 +16,7 @@
 
 #include <Adafruit_VS1053.hpp>
 
-#if defined(__FILE_defined)
+#ifdef NOLA_FILE_SUPPORTED
 
 #ifndef _BV
   #define _BV(x) (1<<(x))
@@ -585,4 +585,4 @@ void Adafruit_VS1053::sineTest(uint8_t n, uint16_t ms) {
   this->_spi.end();
 }
 
-#endif //__FILE_defined
+#endif // NOLA_FILE_SUPPORTED

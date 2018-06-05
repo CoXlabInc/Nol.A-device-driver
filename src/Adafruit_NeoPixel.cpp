@@ -115,13 +115,13 @@ void Adafruit_NeoPixel::show(void) {
   mask = 0x80;
 
   if (is800KHz) {
-    time0  = System.ClockHz / 2500000;
-    time1  = System.ClockHz / 1250000;
-    period = System.ClockHz / 8000000;
+    time0  = System.CLOCK_HZ / 2500000;
+    time1  = System.CLOCK_HZ / 1250000;
+    period = System.CLOCK_HZ / 8000000;
   } else {
-    time0  = System.ClockHz / 2000000;
-    time1  = System.ClockHz / 833333;
-    period = System.ClockHz / 400000;
+    time0  = System.CLOCK_HZ / 2000000;
+    time1  = System.CLOCK_HZ / 833333;
+    period = System.CLOCK_HZ / 400000;
   }
 
   noInterrupts();

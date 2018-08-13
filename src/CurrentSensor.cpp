@@ -10,8 +10,8 @@ CurrentSensor::CurrentSensor(float ADC_AmaxInput, float ADC_DmaxInput, int Resis
 
 // Measure and Caculate AC
 void CurrentSensor::Sense(){
-  float DataValue = 0;
-  float VoltageValue = 0;
+  int DataValue = 0;
+  int VoltageValue = 0;
 
   for (int i=0 ; i<dataNum; i++) {
     DataValue = analogRead(A0);

@@ -4,15 +4,15 @@
 
 class CurrentSensor {
 public:
-  CurrentSensor(int, int, int, int);
+  CurrentSensor(float, float, int, int);
   void Sense();
   float voltageRMS = 0.0;
   float Current = 0;
 
 private:
+  float ADC_Dmax = 0;
+  float ADC_Amax = 0;
   int Resistor = 0;
-  int ADC_Dmax = 0;
-  int ADC_Amax = 0;
   int TransformerWinding = 0;
 
 };

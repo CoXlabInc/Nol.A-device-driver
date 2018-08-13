@@ -1,7 +1,7 @@
 #include "CurrentSensor.hpp"
 #include "cox.h"
 
-CurrentSensor::CurrentSensor(int ADC_AmaxInput, int ADC_DmaxInput, int ResistorInput, int TransformerWindingInput){
+CurrentSensor::CurrentSensor(float ADC_AmaxInput, float ADC_DmaxInput, int ResistorInput, int TransformerWindingInput){
   this->ADC_Amax = ADC_AmaxInput;
   this->ADC_Dmax = ADC_DmaxInput;
   this->Resistor = ResistorInput;

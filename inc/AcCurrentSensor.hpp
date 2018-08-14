@@ -12,7 +12,7 @@ public:
 private:
   float ADC_Dmax = 0;
   float ADC_Amax = 0;
-  int PinNum = -1;
+  int DigitalPinNum = -1;
   int Resistor = 0;
   int TransformerWinding = 0;
 

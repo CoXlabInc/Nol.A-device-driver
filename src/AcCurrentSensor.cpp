@@ -1,8 +1,8 @@
 #include "AcCurrentSensor.hpp"
 #include "cox.h"
 
-AcCurrentSensor::AcCurrentSensor(int PinNumInput, float ADC_AmaxInput, float ADC_DmaxInput, int ResistorInput, int TransformerWindingInput){
-  this->PinNum = PinNumInput;
+AcCurrentSensor::AcCurrentSensor(int DigitalPinNumInput, float ADC_AmaxInput, float ADC_DmaxInput, int ResistorInput, int TransformerWindingInput){
+  this->DigitalPinNum = DigitalPinNumInput;
   this->ADC_Amax = ADC_AmaxInput;
   this->ADC_Dmax = ADC_DmaxInput;
   this->Resistor = ResistorInput;
@@ -15,7 +15,7 @@ void AcCurrentSensor::Sense(){
   int VoltageValue = 0;
 
   for (int i=0 ; i<dataNum; i++) {
-    DataValue = analogRead(PinNum);
+    DataValue = analogRead(this->DigitalPinNum);
     if (DataValue > VoltageValue) VoltageValue = DataValue;
   }
     //calculate data

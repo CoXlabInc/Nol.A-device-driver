@@ -1,7 +1,7 @@
-#include "CurrentSensor.hpp"
+#include "AcCurrentSensor.hpp"
 #include "cox.h"
 
-CurrentSensor::CurrentSensor(float ADC_AmaxInput, float ADC_DmaxInput, int ResistorInput, int TransformerWindingInput){
+AcCurrentSensor::AcCurrentSensor(float ADC_AmaxInput, float ADC_DmaxInput, int ResistorInput, int TransformerWindingInput){
   this->ADC_Amax = ADC_AmaxInput;
   this->ADC_Dmax = ADC_DmaxInput;
   this->Resistor = ResistorInput;
@@ -9,7 +9,7 @@ CurrentSensor::CurrentSensor(float ADC_AmaxInput, float ADC_DmaxInput, int Resis
 }
 
 // Measure and Caculate AC
-void CurrentSensor::Sense(){
+void AcCurrentSensor::Sense(){
   int DataValue = 0;
   int VoltageValue = 0;
 

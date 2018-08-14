@@ -2,9 +2,9 @@
 
 #define dataNum 3000
 
-class CurrentSensor {
+class AcCurrentSensor {
 public:
-  CurrentSensor(float, float, int, int);
+  AcCurrentSensor(float, float, int, int);
   void Sense();
   float voltageRMS = 0.0;
   float Current = 0;

@@ -15,7 +15,7 @@ void AcCurrentSensor::Sense(){
   int VoltageValue = 0;
 
   for (int i=0 ; i<dataNum; i++) {
-    DataValue = analogRead(A0);
+    DataValue = analogRead(PinNum);
     if (DataValue > VoltageValue) VoltageValue = DataValue;
   }
     //calculate data

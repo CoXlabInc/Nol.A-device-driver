@@ -1,7 +1,7 @@
 /*
  * The MIT License (MIT)
  *
- * Copyright (c) 2017 CoXlab Inc.
+ * Copyright (c) 2018 CoXlab Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -23,42 +23,42 @@
  */
 
 /**
- * @author Jongsoo Jeong (CoXlab)
- * @date 2017. 1. 31.
- */
+   \author Jongsoo Jeong (CoXlab)
+   \date 2018. 8. 16.
+*/
 
-#include "cox.h"
 
-#ifndef PMS3003_HPP
-#define PMS3003_HPP
+#ifndef PMS7003_HPP
+#define PMS7003_HPP
 
-class PMS3003 {
+#include "PMS3003.hpp"
+
+class PMS7003 : public PMS3003 {
 public:
-  PMS3003(SerialPort &, int pinSet, int pinReset);
-  void begin();
-
-  void onReadDone(void (*func)(int32_t pm1_0_CF1,
-                               int32_t pm2_5_CF1,
-                               int32_t pm10_0_CF1,
-                               int32_t pm1_0_Atmosphere,
-                               int32_t pm2_5_Atmosphere,
-                               int32_t pm10_0_Atmosphere));
+  PMS7003(SerialPort &port, int pinSet, int pinReset);
+  typedef struct {
+    int32_t pm1_CF1;
+    int32_t pm2_5_CF1;
+    int32_t pm10_CF1;
+    int32_t pm1_Atmosphere;
+    int32_t pm2_5_Atmosphere;
+    int32_t pm10_Atmosphere;
+    int32_t nParticlesBeyond0_3um_in100mL;
+    int32_t nParticlesBeyond0_5um_in100mL;
+    int32_t nParticlesBeyond1um_in100mL;
+    int32_t nParticlesBeyond2_5um_in100mL;
+    int32_t nParticlesBeyond5um_in100mL;
+    int32_t nParticlesBeyond10um_in100mL;
+  } value_t;
+  void onReadDone(void (*func)(value_t &));
 
 protected:
-  void (*callback)(int32_t pm1_0_CF1,
-                   int32_t pm2_5_CF1,
-                   int32_t pm10_0_CF1,
-                   int32_t pm1_0_Atmosphere,
-                   int32_t pm2_5_Atmosphere,
-                   int32_t pm10_0_Atmosphere) = NULL;
-  SerialPort &p;
-  const int pinSet, pinReset;
-  uint8_t index = 0, high = 0;
-
-  virtual void eventSensorDataReceived();
+  void (*callback)(value_t &) = NULL;
+  void eventSensorDataReceived() override;
 
 private:
-  int32_t measured[6];
+  value_t sensingValue;
+  uint16_t checkCode;
 };
 
-#endif //PMS3003_HPP
+#endif //PMS7003_HPP

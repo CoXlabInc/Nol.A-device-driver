@@ -56,6 +56,7 @@ void VC0706::eventDataReceived() {
         this->index = 0;
         this->flag = 0;
         delay(100);
+        if(this->atOnce == 1) { stopFrame(); }
         if(this->setRatioCallback != NULL){
           this->setRatioCallback();
           setRatioCallback = NULL;
@@ -186,13 +187,19 @@ void VC0706::sendData(char *args, uint8_t Len) {
   }
 }
 
-void VC0706::takePicture(void (*func)(const char *buf, uint32_t size)) {
+void VC0706::takePicture(void (*func)(const char *buf, uint32_t size), uint8_t compRatio) {
   if (this->flag == 0) {
-    this->takePictureCallback = func;
-    this->flag |= stopFrameFlag;
-    this->atOnce = 1;
-    char args[] = {0x56, 0x00, 0x36, 0x01, 0x00};
-    sendData(args, sizeof(args));
+    if(this->prevRatio != this->ratio ){
+      //If you set the compression ratio, Start the setRatio function !
+      this->takePictureCallback = func;
+      this->atOnce = 1;
+      setRatio(NULL, compRatio);
+    } else {
+      this->takePictureCallback = func;
+      this->atOnce = 1;
+      stopFrame();
+    }
+    this->prevRatio = this->ratio;
   } else {
     //Busy now !
     reset();

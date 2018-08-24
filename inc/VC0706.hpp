@@ -9,7 +9,7 @@ public:
 
   void begin();
   void getVer();
-  void takePicture(void (*func)(const char *buf, uint32_t size), uint8_t compRatio = 0x36);
+  void takePicture(void (*func)(const char *buf, uint32_t size), uint8_t compRatio = 0x44);
   void setRatio(void (*func)(), uint8_t compRatio);
   void stopFrame();
   void getLen();
@@ -23,11 +23,13 @@ public:
 
   static void recoverFrame(void (*func)( ), void *ctx);
   static void motionStatus(void *);
+  static void reStart(void *ctx);
 
   char *imageBuf = NULL;
   char version[12] = {0,};
-  uint8_t ratio = 0x36;
-  uint8_t prevRatio = 0x36;
+  uint8_t ratio = 0x54;
+  uint8_t prevRatio = 0x54;
+  uint8_t checkSetedRatio = 0;
   uint8_t previousRatio = 0;
   uint32_t size = 0;
   uint32_t imageSize = 0;

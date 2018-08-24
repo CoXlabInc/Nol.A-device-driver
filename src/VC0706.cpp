@@ -160,6 +160,7 @@ void VC0706::eventDataReceived()
     } else if (this->flag == imageFlag && ((this->index)==(this->imageSize+6)) &&
               (this->data == 0x00) && (previousData ==0x76)) {
         if (this->takePictureCallback != NULL) {
+          System.feedWatchdog();
           this->takePictureCallback(this->imageBuf, this->imageSize);
         }
 
@@ -231,7 +232,6 @@ void VC0706::getLen()
   sendData(args, sizeof(args));
 }
 
-
 void VC0706::getImage(void (*func)(const char *buf, uint32_t size))
 {
   //Take a image data
@@ -289,7 +289,7 @@ void VC0706::reset()
   while(this->port->available()>0){
     this->data = this->port->read();
   }
-
+  
   this->flag |= resetFlag;
   this->data = 0;
   this->index = 0;

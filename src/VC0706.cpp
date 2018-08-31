@@ -1,9 +1,6 @@
 #include <cox.h>
 #include "VC0706.hpp"
 
-Timer captureCycle;
-Timer retry;
-
 VC0706::VC0706(SerialPort &p)
 {
   this->port = &p;

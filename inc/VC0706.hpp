@@ -35,7 +35,8 @@ public:
   uint32_t imageSize = 0;
 private:
   SerialPort *port;
-
+  Timer captureCycle;
+  Timer retry;
   int atOnce = 0;
   unsigned char flag = 0;
   uint8_t versionIndex = 0;

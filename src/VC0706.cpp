@@ -2,24 +2,29 @@
 #include "VC0706.hpp"
 
 Timer captureCycle;
+Timer retry;
 
-VC0706::VC0706(SerialPort &p) {
+VC0706::VC0706(SerialPort &p)
+{
   this->port = &p;
   this->index = 0;
 }
 
-void VC0706::begin() {
+void VC0706::begin()
+{
   this->port->begin(38400);
   this->port->onReceive(SerialDataReceived, this);
   this->port->listen();
 }
 
-void VC0706::SerialDataReceived(void *ctx) {
+void VC0706::SerialDataReceived(void *ctx)
+{
   VC0706 *vC0706 = (VC0706 *) ctx;
   vC0706->eventDataReceived();
 }
 
-void VC0706::eventDataReceived() {
+void VC0706::eventDataReceived()
+{
   while(this->port->available()>0) {
     this->data = this->port->read();
 //===================== check returnSign & serialNumber ======================
@@ -85,6 +90,7 @@ void VC0706::eventDataReceived() {
     } else if((this->flag == compressionFlag) && (this->index == 4) &&
               (this->previousData == 0x00) && (this->data == 0x00)){
         //Finish the setRatio & Start recoverFrame !
+        retry.stop();
         this->index = 0;
         this->flag = 0;
         recoverFrame(NULL,this);
@@ -154,6 +160,7 @@ void VC0706::eventDataReceived() {
     } else if (this->flag == imageFlag && ((this->index)==(this->imageSize+6)) &&
               (this->data == 0x00) && (previousData ==0x76)) {
         if (this->takePictureCallback != NULL) {
+          System.feedWatchdog();
           this->takePictureCallback(this->imageBuf, this->imageSize);
         }
 
@@ -181,18 +188,21 @@ void VC0706::eventDataReceived() {
   }
 }
 
-void VC0706::sendData(char *args, uint8_t Len) {
+void VC0706::sendData(char *args, uint8_t Len)
+{
   for(int j=0; j<Len; j++,args++){
     this->port->write(*args);
   }
 }
 
-void VC0706::takePicture(void (*func)(const char *buf, uint32_t size), uint8_t compRatio) {
+void VC0706::takePicture(void (*func)(const char *buf, uint32_t size), uint8_t compRatio)
+{
   if (this->flag == 0) {
-    if(this->prevRatio != this->ratio ){
+    if(this->checkSetedRatio != 1 ){
       //If you set the compression ratio, Start the setRatio function !
       this->takePictureCallback = func;
       this->atOnce = 1;
+      this->checkSetedRatio = 1;
       setRatio(NULL, compRatio);
     } else {
       this->takePictureCallback = func;
@@ -206,22 +216,24 @@ void VC0706::takePicture(void (*func)(const char *buf, uint32_t size), uint8_t c
   }
 }
 
-void VC0706::stopFrame() {
+void VC0706::stopFrame()
+{
   //Captures the current frame
   this->flag |= stopFrameFlag;
   char args[] = {0x56, 0x00, 0x36, 0x01, 0x00};
   sendData(args, sizeof(args));
 }
 
-void VC0706::getLen() {
+void VC0706::getLen()
+{
   //Take a length
   this->flag |= dataLenFlag;
   char args[] = {0x56, 0x00, 0x34, 0x01, 0x00};
   sendData(args, sizeof(args));
 }
 
-
-void VC0706::getImage(void (*func)(const char *buf, uint32_t size)) {
+void VC0706::getImage(void (*func)(const char *buf, uint32_t size))
+{
   //Take a image data
   this->imageBuf = (char *) dynamicMalloc(this->imageSize);
 
@@ -263,20 +275,21 @@ void VC0706::getImage(void (*func)(const char *buf, uint32_t size)) {
   }
 }
 
-void VC0706::getVer() {
+void VC0706::getVer()
+{
   //Take a Version
   this->flag |= getVerFlag;
   char args[] = {0x56, 0x00, 0x11, 0x00};
   sendData(args, sizeof(args));
 }
 
-void VC0706::reset() {
+void VC0706::reset()
+{
   //System reset
-
   while(this->port->available()>0){
     this->data = this->port->read();
   }
-
+  
   this->flag |= resetFlag;
   this->data = 0;
   this->index = 0;
@@ -284,7 +297,10 @@ void VC0706::reset() {
   sendData(args, sizeof(args));
 }
 
-void VC0706::setRatio(void (*func)(), uint8_t compRatio) {
+void VC0706::setRatio(void (*func)(), uint8_t compRatio)
+{
+  retry.onFired(reStart, this);
+  retry.startOneShot(10000);
   this->flag |= compressionFlag;
   this->setRatioCallback = func;
   //Max value of the compression ratio
@@ -296,7 +312,8 @@ void VC0706::setRatio(void (*func)(), uint8_t compRatio) {
   this->sendData(args, sizeof(args));
 }
 
-void VC0706::recoverFrame(void (*func)(), void *ctx ) {
+void VC0706::recoverFrame(void (*func)(), void *ctx )
+{
   //Recover Frame for next picture
   VC0706 *vC0706 = (VC0706 *)ctx;
   vC0706->recoverFrameCallback = func;
@@ -305,7 +322,8 @@ void VC0706::recoverFrame(void (*func)(), void *ctx ) {
   vC0706->sendData(args, sizeof(args));
 }
 
-void VC0706::setMotionCtrl(uint8_t len, uint8_t motionAttribute, uint8_t ctrlItme, uint8_t firstBit, uint8_t secondBit) {
+void VC0706::setMotionCtrl(uint8_t len, uint8_t motionAttribute, uint8_t ctrlItme, uint8_t firstBit, uint8_t secondBit)
+{
   //Set the motion control
   this->flag |= motionCtrlFlag;
   if(ctrlItme==1 ) {
@@ -319,7 +337,8 @@ void VC0706::setMotionCtrl(uint8_t len, uint8_t motionAttribute, uint8_t ctrlItm
   }
 }
 
-void VC0706::startCapture(void (*func)(), uint16_t cycle) {
+void VC0706::startCapture(void (*func)(), uint16_t cycle)
+{
   //Start a capture
   this->flag |= captureFlag;
   this->successCapture = func;
@@ -327,16 +346,26 @@ void VC0706::startCapture(void (*func)(), uint16_t cycle) {
   captureCycle.startPeriodic(cycle);
 }
 
-void VC0706::motionStatus(void *ctx) {
+void VC0706::motionStatus(void *ctx)
+{
   //check the motionStatus
   VC0706 *vC0706 = (VC0706 *) ctx;
   char args[] = {0x56, 0x00, 0x43, 0x01, 0x00};
   vC0706->sendData(args, sizeof(args));
 }
 
-void VC0706::endCapture() {
+void VC0706::endCapture()
+{
   //if you want to exit startCapture, run the endCapture()
   this->flag = 0;
   this->index = 0;
   captureCycle.stop();
+}
+
+void VC0706::reStart(void *ctx)
+{
+  VC0706 *vC0706 = (VC0706 *) ctx;
+  vC0706->flag = 0;
+  vC0706->index = 0;
+  vC0706->setRatio(NULL, vC0706->ratio);
 }

@@ -303,10 +303,6 @@ void VC0706::setRatio(void (*func)(), uint8_t compRatio)
   retry.startOneShot(10000);
   this->flag |= compressionFlag;
   this->setRatioCallback = func;
-  //Max value of the compression ratio
-  if(compRatio>0xFF) { compRatio=0xFF; }
-  //Min value of the compression ratio
-  if(compRatio<0x00) { compRatio=0x00; }
   this->ratio = compRatio;
   char args[] = {0x56, 0x00, 0x31, 0x05, 0x01, 0x01, 0x12, 0x04, this->ratio};
   this->sendData(args, sizeof(args));

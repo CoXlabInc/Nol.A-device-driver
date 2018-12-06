@@ -4,22 +4,16 @@
 VC0706::VC0706(SerialPort &p) : port(p) {
 }
 
-void VC0706::begin()
-{
+void VC0706::begin() {
   this->port.begin(38400);
-  this->port.onReceive(SerialDataReceived, this);
+  this->port.onReceive([](void *ctx) {
+                         ((VC0706 *) ctx)->eventDataReceived();
+                       }, this);
   this->port.listen();
 }
 
-void VC0706::SerialDataReceived(void *ctx)
-{
-  VC0706 *vC0706 = (VC0706 *) ctx;
-  vC0706->eventDataReceived();
-}
-
-void VC0706::eventDataReceived()
-{
-  while(this->port.available()>0) {
+void VC0706::eventDataReceived() {
+  while(this->port.available() > 0) {
     this->data = this->port.read();
 //===================== check returnSign & serialNumber ======================
     if ((this->index == 0 && this->data != returnSign) ||
@@ -60,8 +54,8 @@ void VC0706::eventDataReceived()
           this->setRatioCallback();
           setRatioCallback = NULL;
         }
-        if (this->callbackRecoverFrame != nullptr) {
-          this->callbackRecoverFrame(this->callbackArgRecoverFrame);
+        if (this->callbackOnRecoverFrame != nullptr) {
+          this->callbackOnRecoverFrame(this->callbackArgOnRecoverFrame);
         }
         continue;
     } else if((this->state == STATE_DATA_LEN) && (this->index == 4) &&
@@ -98,7 +92,9 @@ void VC0706::eventDataReceived()
               (this->previousData == 0x01) && (this->data == 0x11)) {
         this->state = STATE_IDLE;
         this->index = 0;
-        this->successCapture();
+        if (this->callbackOnCaptured) {
+          this->callbackOnCaptured(this->callbackArgOnCaptured);
+        }
         continue;
     } else if((this->state == STATE_CAPTURE) && (this->index == 6) &&
               (this->previousData == 0x01) && (this->data == 0x01)) {
@@ -305,8 +301,8 @@ void VC0706::setRatio(void (*func)(), uint8_t compRatio)
 }
 
 void VC0706::recoverFrame(void (*func)(void *), void *ctx) {
-  this->callbackRecoverFrame = func;
-  this->callbackArgRecoverFrame = ctx;
+  this->callbackOnRecoverFrame = func;
+  this->callbackArgOnRecoverFrame = ctx;
   this->state = STATE_RECOVER;
   char args[] = {0x56, 0x00, 0x36, 0x01, 0x03};
   this->sendData(args, sizeof(args));
@@ -327,14 +323,17 @@ void VC0706::setMotionCtrl(uint8_t len, uint8_t motionAttribute, uint8_t ctrlItm
   }
 }
 
-void VC0706::startCapture(void (*func)(), uint16_t cycle) {
+void VC0706::startCapture(uint16_t periodMillis, void (*func)(void *), void *ctx) {
   //Start a capture
   this->state = STATE_CAPTURE;
-  this->successCapture = func;
-  captureCycle.onFired([](void *ctx) {
-                         ((VC0706 *) ctx)->checkMotionStatus();
-                       }, this);
-  captureCycle.startPeriodic(cycle);
+  this->callbackOnCaptured = func;
+  this->callbackArgOnCaptured = ctx;
+  if (periodMillis > 0) {
+    captureCycle.onFired([](void *ctx) {
+                           ((VC0706 *) ctx)->checkMotionStatus();
+                         }, this);
+    captureCycle.startPeriodic(periodMillis);
+  }
 }
 
 void VC0706::checkMotionStatus() {

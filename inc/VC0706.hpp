@@ -16,7 +16,9 @@ public:
   void getImage();
   void getImage(void (*func)(const char *buf, uint32_t size));
   void reset();
-  void startCapture(void (*func)(), uint16_t cycle);
+  void startCapture(uint16_t cycle,
+                    void (*func)(void *) = nullptr,
+                    void *ctx = nullptr);
   void endCapture();
   void setMotionCtrl (uint8_t len, uint8_t motionAttribute, uint8_t ctrlItme, uint8_t secondBit, uint8_t thirdBit=0);
   void sendData(char *args, uint8_t Len);
@@ -60,10 +62,10 @@ private:
   uint32_t motionCycle = 0;
 
   void eventDataReceived();
-  void (*successCapture)() = NULL;
-  void (*callbackRecoverFrame)(void *) = nullptr;
-  void *callbackArgRecoverFrame = nullptr;
+  void (*callbackOnCaptured)(void *) = nullptr;
+  void *callbackArgOnCaptured = nullptr;
+  void (*callbackOnRecoverFrame)(void *) = nullptr;
+  void *callbackArgOnRecoverFrame = nullptr;
   void (*setRatioCallback)() = NULL;
   void (*takePictureCallback)(const char *buf, uint32_t size) = NULL;
-  static void SerialDataReceived(void *ctx);
 };

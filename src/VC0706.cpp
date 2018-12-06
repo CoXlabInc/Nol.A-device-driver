@@ -1,7 +1,8 @@
 #include <cox.h>
 #include "VC0706.hpp"
 
-VC0706::VC0706(SerialPort &p) : port(p) {
+VC0706::VC0706(SerialPort &p, uint8_t compRatio)
+  : ratio(compRatio), port(p) {
 }
 
 void VC0706::begin() {
@@ -41,7 +42,7 @@ void VC0706::eventDataReceived() {
         //Finish the stopFrame !
         this->index = 0;
         this->state = STATE_IDLE;
-        if(this->atOnce == 1) { getLen(); }
+        getLen();
         continue;
     } else if((this->state == STATE_RECOVER) && (this->index == 4) &&
             (this->previousData == 0x00) && (this->data == 0x00)) {
@@ -49,10 +50,10 @@ void VC0706::eventDataReceived() {
         this->index = 0;
         this->state = STATE_IDLE;
         delay(100);
-        if(this->atOnce == 1) { stopFrame(); }
-        if(this->setRatioCallback != NULL){
-          this->setRatioCallback();
-          setRatioCallback = NULL;
+        if (this->callbackOnRatioSet != nullptr){
+          void (*callback)(void *) = this->callbackOnRatioSet;
+          this->callbackOnRatioSet = nullptr;
+          callback(this->callbackArgOnRatioSet);
         }
         if (this->callbackOnRecoverFrame != nullptr) {
           this->callbackOnRecoverFrame(this->callbackArgOnRecoverFrame);
@@ -122,7 +123,7 @@ void VC0706::eventDataReceived() {
         this->imageSize = size;
         this->state = STATE_IDLE;
         this->index = 0;
-        if(this->atOnce == 1) { getImage(NULL); }
+        getImage(NULL);
         continue;
     }
 //============================== save the imageBuf or get the version ============================
@@ -149,26 +150,32 @@ void VC0706::eventDataReceived() {
 
     } else if (this->state == STATE_IMAGE && ((this->index)==(this->imageSize+6)) &&
               (this->data == 0x00) && (previousData ==0x76)) {
-        if (this->takePictureCallback != NULL) {
-          System.feedWatchdog();
-          this->takePictureCallback(this->imageBuf, this->imageSize);
+        if (!postTask([](void *ctx) {
+                       VC0706 *cam = (VC0706 *) ctx;
+                       if (cam->callbackOnPictureTaken) {
+                         cam->callbackOnPictureTaken(cam->callbackArgOnPictureTaken,
+                                                     cam->imageBuf,
+                                                     cam->imageSize);
+                         dynamicFree(cam->imageBuf);
+                         cam->imageBuf = nullptr;
+                         cam->imageSize = 0;
+                       }
+                     }, this)) {
+          dynamicFree(this->imageBuf);
+          this->imageBuf = nullptr;
+          this->imageSize = 0;
         }
-
-        dynamicFree(this->imageBuf);
-        this->imageBuf = NULL;
     } else if ( (this->state == STATE_IMAGE) && ((this->imageSize+9)==this->index) &&
                 (this->data == 0x00) && (previousData ==0x00)){
         //Finish the getImage & Start the recoverFrame !
         this->index = 0;
         this->state = STATE_IDLE;
         this->imageIndex = 0;
-        this->imageSize = 0;
         this->len[0] = 0;
         this->len[1] = 0;
         this->len[2] = 0;
         this->len[3] = 0;
-        size=0;
-        atOnce=0;
+        size = 0;
         recoverFrame();
         continue;
     }
@@ -185,21 +192,22 @@ void VC0706::sendData(char *args, uint8_t Len)
   }
 }
 
-void VC0706::takePicture(void (*func)(const char *buf, uint32_t size), uint8_t compRatio)
-{
+void VC0706::takePicture(void (*func)(void *arg, const char *buf, uint32_t size),
+                         void *arg) {
   if (this->state == STATE_IDLE) {
-    if(this->checkSetedRatio != 1 ){
+    this->callbackOnPictureTaken = func;
+    this->callbackArgOnPictureTaken = arg;
+    if(this->ratio != this->prevRatio){
       //If you set the compression ratio, Start the setRatio function !
-      this->takePictureCallback = func;
-      this->atOnce = 1;
-      this->checkSetedRatio = 1;
-      setRatio(NULL, compRatio);
+      setRatio(ratio,
+               [](void *ctx) {
+                 ((VC0706 *) ctx)->stopFrame();
+               },
+               this);
+      this->prevRatio = this->ratio;
     } else {
-      this->takePictureCallback = func;
-      this->atOnce = 1;
       stopFrame();
     }
-    this->prevRatio = this->ratio;
   } else {
     //Busy now !
     reset();
@@ -254,7 +262,7 @@ void VC0706::getImage(void (*func)(const char *buf, uint32_t size))
     }
 
     this->previousRatio = this->ratio;
-    setRatio(NULL,this->ratio);
+    setRatio(this->ratio);
   }
   else {
     //Take a image data
@@ -287,14 +295,14 @@ void VC0706::reset()
   sendData(args, sizeof(args));
 }
 
-void VC0706::setRatio(void (*func)(), uint8_t compRatio)
-{
+void VC0706::setRatio(uint8_t compRatio, void (*func)(void *), void *arg) {
   retry.onFired([](void *ctx) {
                   ((VC0706 *) ctx)->restart();
                 }, this);
   retry.startOneShot(10000);
   this->state = STATE_COMPRESSION;
-  this->setRatioCallback = func;
+  this->callbackOnRatioSet = func;
+  this->callbackArgOnRatioSet = arg;
   this->ratio = compRatio;
   char args[] = {0x56, 0x00, 0x31, 0x05, 0x01, 0x01, 0x12, 0x04, this->ratio};
   this->sendData(args, sizeof(args));
@@ -352,5 +360,5 @@ void VC0706::endCapture()
 void VC0706::restart() {
   this->state = STATE_IDLE;
   this->index = 0;
-  this->setRatio(NULL, this->ratio);
+  this->setRatio(this->ratio);
 }

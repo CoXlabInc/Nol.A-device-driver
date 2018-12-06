@@ -5,12 +5,11 @@
 
 class VC0706 {
 public:
-  VC0706(SerialPort &);
+  VC0706(SerialPort &, uint8_t compRatio = 0xFF);
 
   void begin();
   void getVer();
-  void takePicture(void (*func)(const char *buf, uint32_t size), uint8_t compRatio = 0x44);
-  void setRatio(void (*func)(), uint8_t compRatio);
+  void takePicture(void (*func)(void *, const char *buf, uint32_t size), void *arg);
   void stopFrame();
   void getLen();
   void getImage();
@@ -18,28 +17,20 @@ public:
   void reset();
   void startCapture(uint16_t cycle,
                     void (*func)(void *) = nullptr,
-                    void *ctx = nullptr);
+                    void *arg = nullptr);
   void endCapture();
   void setMotionCtrl (uint8_t len, uint8_t motionAttribute, uint8_t ctrlItme, uint8_t secondBit, uint8_t thirdBit=0);
   void sendData(char *args, uint8_t Len);
 
-  void recoverFrame(void (*func)(void *) = nullptr, void *ctx = nullptr);
+  void recoverFrame(void (*func)(void *) = nullptr, void *arg = nullptr);
   void checkMotionStatus();
   void restart();
 
-  char *imageBuf = NULL;
-  char version[12] = {0,};
-  uint8_t ratio = 0x54;
-  uint8_t prevRatio = 0x54;
-  uint8_t checkSetedRatio = 0;
-  uint8_t previousRatio = 0;
-  uint32_t size = 0;
-  uint32_t imageSize = 0;
+  uint8_t ratio;
 private:
   SerialPort &port;
   Timer captureCycle;
   Timer retry;
-  int atOnce = 0;
 
   enum state { STATE_IDLE = 0,
                STATE_STOP_FRAME = 1,
@@ -60,12 +51,23 @@ private:
   uint16_t index = 0;
   uint16_t imageIndex = 0;
   uint32_t motionCycle = 0;
+  int16_t prevRatio = -1;
+  char *imageBuf = NULL;
+  char version[12] = {0,};
+  uint8_t checkSetedRatio = 0;
+  uint8_t previousRatio = 0;
+  uint32_t size = 0;
+  uint32_t imageSize = 0;
 
   void eventDataReceived();
   void (*callbackOnCaptured)(void *) = nullptr;
   void *callbackArgOnCaptured = nullptr;
   void (*callbackOnRecoverFrame)(void *) = nullptr;
   void *callbackArgOnRecoverFrame = nullptr;
-  void (*setRatioCallback)() = NULL;
-  void (*takePictureCallback)(const char *buf, uint32_t size) = NULL;
+  void (*callbackOnRatioSet)(void *) = nullptr;
+  void *callbackArgOnRatioSet = nullptr;
+  void (*callbackOnPictureTaken)(void *, const char *buf, uint32_t size) = nullptr;
+  void *callbackArgOnPictureTaken = nullptr;
+
+  void setRatio(uint8_t compRatio, void (*func)(void *) = nullptr, void *arg = nullptr);
 };

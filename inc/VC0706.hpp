@@ -21,9 +21,9 @@ public:
   void setMotionCtrl (uint8_t len, uint8_t motionAttribute, uint8_t ctrlItme, uint8_t secondBit, uint8_t thirdBit=0);
   void sendData(char *args, uint8_t Len);
 
-  static void recoverFrame(void (*func)( ), void *ctx);
-  static void motionStatus(void *);
-  static void reStart(void *ctx);
+  void recoverFrame(void (*func)(void *) = nullptr, void *ctx = nullptr);
+  void checkMotionStatus();
+  void restart();
 
   char *imageBuf = NULL;
   char version[12] = {0,};
@@ -61,7 +61,8 @@ private:
 
   void eventDataReceived();
   void (*successCapture)() = NULL;
-  void (*recoverFrameCallback)() = NULL;
+  void (*callbackRecoverFrame)(void *) = nullptr;
+  void *callbackArgRecoverFrame = nullptr;
   void (*setRatioCallback)() = NULL;
   void (*takePictureCallback)(const char *buf, uint32_t size) = NULL;
   static void SerialDataReceived(void *ctx);

@@ -60,8 +60,8 @@ void VC0706::eventDataReceived()
           this->setRatioCallback();
           setRatioCallback = NULL;
         }
-        if(this->recoverFrameCallback != NULL){
-          this->recoverFrameCallback();
+        if (this->callbackRecoverFrame != nullptr) {
+          this->callbackRecoverFrame(this->callbackArgRecoverFrame);
         }
         continue;
     } else if((this->state == STATE_DATA_LEN) && (this->index == 4) &&
@@ -73,7 +73,7 @@ void VC0706::eventDataReceived()
             (this->previousData != 0x00) && (this->data != 0x00)) {
         this->index = 0;
         this->state = STATE_IDLE;
-        recoverFrame(NULL,this);
+        recoverFrame();
         continue;
     } else if((this->state == STATE_MOTION_CTRL) && (this->index == 4) &&
               (this->previousData == 0x00) && (this->data == 0x00)) {
@@ -87,7 +87,7 @@ void VC0706::eventDataReceived()
         retry.stop();
         this->index = 0;
         this->state = STATE_IDLE;
-        recoverFrame(NULL,this);
+        recoverFrame();
         continue;
     } else if((this->state == STATE_IMAGE) && (this->index == 6) &&
               (this->previousData != 0xFF) && (this->data != 0xD8)) {
@@ -173,7 +173,7 @@ void VC0706::eventDataReceived()
         this->len[3] = 0;
         size=0;
         atOnce=0;
-        recoverFrame(NULL,this);
+        recoverFrame();
         continue;
     }
 
@@ -293,7 +293,9 @@ void VC0706::reset()
 
 void VC0706::setRatio(void (*func)(), uint8_t compRatio)
 {
-  retry.onFired(reStart, this);
+  retry.onFired([](void *ctx) {
+                  ((VC0706 *) ctx)->restart();
+                }, this);
   retry.startOneShot(10000);
   this->state = STATE_COMPRESSION;
   this->setRatioCallback = func;
@@ -302,14 +304,12 @@ void VC0706::setRatio(void (*func)(), uint8_t compRatio)
   this->sendData(args, sizeof(args));
 }
 
-void VC0706::recoverFrame(void (*func)(), void *ctx )
-{
-  //Recover Frame for next picture
-  VC0706 *vC0706 = (VC0706 *)ctx;
-  vC0706->recoverFrameCallback = func;
-  vC0706->state = STATE_RECOVER;
+void VC0706::recoverFrame(void (*func)(void *), void *ctx) {
+  this->callbackRecoverFrame = func;
+  this->callbackArgRecoverFrame = ctx;
+  this->state = STATE_RECOVER;
   char args[] = {0x56, 0x00, 0x36, 0x01, 0x03};
-  vC0706->sendData(args, sizeof(args));
+  this->sendData(args, sizeof(args));
 }
 
 void VC0706::setMotionCtrl(uint8_t len, uint8_t motionAttribute, uint8_t ctrlItme, uint8_t firstBit, uint8_t secondBit)
@@ -327,21 +327,19 @@ void VC0706::setMotionCtrl(uint8_t len, uint8_t motionAttribute, uint8_t ctrlItm
   }
 }
 
-void VC0706::startCapture(void (*func)(), uint16_t cycle)
-{
+void VC0706::startCapture(void (*func)(), uint16_t cycle) {
   //Start a capture
   this->state = STATE_CAPTURE;
   this->successCapture = func;
-  captureCycle.onFired(motionStatus,this);
+  captureCycle.onFired([](void *ctx) {
+                         ((VC0706 *) ctx)->checkMotionStatus();
+                       }, this);
   captureCycle.startPeriodic(cycle);
 }
 
-void VC0706::motionStatus(void *ctx)
-{
-  //check the motionStatus
-  VC0706 *vC0706 = (VC0706 *) ctx;
+void VC0706::checkMotionStatus() {
   char args[] = {0x56, 0x00, 0x43, 0x01, 0x00};
-  vC0706->sendData(args, sizeof(args));
+  this->sendData(args, sizeof(args));
 }
 
 void VC0706::endCapture()
@@ -352,10 +350,8 @@ void VC0706::endCapture()
   captureCycle.stop();
 }
 
-void VC0706::reStart(void *ctx)
-{
-  VC0706 *vC0706 = (VC0706 *) ctx;
-  vC0706->state = STATE_IDLE;
-  vC0706->index = 0;
-  vC0706->setRatio(NULL, vC0706->ratio);
+void VC0706::restart() {
+  this->state = STATE_IDLE;
+  this->index = 0;
+  this->setRatio(NULL, this->ratio);
 }

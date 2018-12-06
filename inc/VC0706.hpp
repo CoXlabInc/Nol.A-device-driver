@@ -38,7 +38,19 @@ private:
   Timer captureCycle;
   Timer retry;
   int atOnce = 0;
-  unsigned char flag = 0;
+
+  enum state { STATE_IDLE = 0,
+               STATE_STOP_FRAME = 1,
+               STATE_DATA_LEN = 2,
+               STATE_IMAGE = 3,
+               STATE_GET_VER = 4,
+               STATE_RESET = 5,
+               STATE_RECOVER = 6,
+               STATE_MOTION_CTRL = 7,
+               STATE_CAPTURE = 8,
+               STATE_COMPRESSION = 9 };
+
+  state state = STATE_IDLE;
   uint8_t versionIndex = 0;
   uint8_t len[4] = {0,};
   uint8_t data = 0;
@@ -46,18 +58,6 @@ private:
   uint16_t index = 0;
   uint16_t imageIndex = 0;
   uint32_t motionCycle = 0;
-
-  enum flagType {
-    stopFrameFlag = 0x01,
-    dataLenFlag = 0x02,
-    imageFlag = 0x03,
-    getVerFlag = 0x04,
-    resetFlag = 0x05,
-    recoverFlag = 0x06,
-    motionCtrlFlag = 0x07,
-    captureFlag = 0x08,
-    compressionFlag = 0x09,
-  };
 
   void eventDataReceived();
   void (*successCapture)() = NULL;

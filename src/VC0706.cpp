@@ -29,7 +29,7 @@ void VC0706::eventDataReceived()
         (this->index == 1 && this->data != serialNumber)) {
         this->index = 0;
         continue;
-//============================ check the flag ================================
+//============================ check the state ================================
     } else if((this->index == 2) && (data == 0x32)) {
         if (this->imageBuf == NULL) {
           // do something
@@ -38,25 +38,25 @@ void VC0706::eventDataReceived()
           this->imageIndex = 0;
         }
     }
-    //============ check return value and reset the flag, index ===================
-      else if ((this->flag == resetFlag) && (this->index == 4) &&
+    //============ check return value and reset the state, index ===================
+      else if ((this->state == STATE_RESET) && (this->index == 4) &&
             (this->previousData == 0x00) && (this->data == 0x00)) {
         //Finish the reset !
         this->index = 0;
-        this->flag = 0;
+        this->state = STATE_IDLE;
         continue;
-    } else if((this->flag == stopFrameFlag) && (this->index == 4) &&
+    } else if((this->state == STATE_STOP_FRAME) && (this->index == 4) &&
             (this->previousData == 0x00) && (this->data == 0x00)) {
         //Finish the stopFrame !
         this->index = 0;
-        this->flag = 0;
+        this->state = STATE_IDLE;
         if(this->atOnce == 1) { getLen(); }
         continue;
-    } else if((this->flag == recoverFlag) && (this->index == 4) &&
+    } else if((this->state == STATE_RECOVER) && (this->index == 4) &&
             (this->previousData == 0x00) && (this->data == 0x00)) {
         //Finish recoverFrame !
         this->index = 0;
-        this->flag = 0;
+        this->state = STATE_IDLE;
         delay(100);
         if(this->atOnce == 1) { stopFrame(); }
         if(this->setRatioCallback != NULL){
@@ -67,78 +67,78 @@ void VC0706::eventDataReceived()
           this->recoverFrameCallback();
         }
         continue;
-    } else if((this->flag == dataLenFlag) && (this->index == 4) &&
+    } else if((this->state == STATE_DATA_LEN) && (this->index == 4) &&
             (this->previousData != 0x00) && (this->data != 0x04)) {
         this->index = 0;
-        this->flag = 0;
+        this->state = STATE_IDLE;
         continue;
-    } else if((this->flag == imageFlag) && (this->index == 4) &&
+    } else if((this->state == STATE_IMAGE) && (this->index == 4) &&
             (this->previousData != 0x00) && (this->data != 0x00)) {
         this->index = 0;
-        this->flag = 0;
+        this->state = STATE_IDLE;
         recoverFrame(NULL,this);
         continue;
-    } else if((this->flag == motionCtrlFlag) && (this->index == 4) &&
+    } else if((this->state == STATE_MOTION_CTRL) && (this->index == 4) &&
               (this->previousData == 0x00) && (this->data == 0x00)) {
         //Finish the setMotionCtrl !
         this->index = 0;
-        this->flag = 0;
+        this->state = STATE_IDLE;
         continue;
-    } else if((this->flag == compressionFlag) && (this->index == 4) &&
+    } else if((this->state == STATE_COMPRESSION) && (this->index == 4) &&
               (this->previousData == 0x00) && (this->data == 0x00)){
         //Finish the setRatio & Start recoverFrame !
         retry.stop();
         this->index = 0;
-        this->flag = 0;
+        this->state = STATE_IDLE;
         recoverFrame(NULL,this);
         continue;
-    } else if((this->flag == imageFlag) && (this->index == 6) &&
+    } else if((this->state == STATE_IMAGE) && (this->index == 6) &&
               (this->previousData != 0xFF) && (this->data != 0xD8)) {
         this->index = 0;
-        this->flag = 0;
+        this->state = STATE_IDLE;
         continue;
-    } else if((this->flag == captureFlag) && (this->index == 6) &&
+    } else if((this->state == STATE_CAPTURE) && (this->index == 6) &&
               (this->previousData == 0x01) && (this->data == 0x11)) {
-        this->flag = 0;
+        this->state = STATE_IDLE;
         this->index = 0;
         this->successCapture();
         continue;
-    } else if((this->flag == captureFlag) && (this->index == 6) &&
+    } else if((this->state == STATE_CAPTURE) && (this->index == 6) &&
               (this->previousData == 0x01) && (this->data == 0x01)) {
-        this->flag = 0;
+        this->state = STATE_IDLE;
         this->index = 0;
         continue;
-    } else if((this->flag == getVerFlag) && (this->index == 15) &&
+    } else if((this->state == STATE_GET_VER) && (this->index == 15) &&
               (previousData == 0x30) && (this->data == 0x30)) {
         //Finish the get version !
         this->index = 0;
-        this->flag = 0;
+        this->state = STATE_IDLE;
         continue;
-    } else if((this->flag == dataLenFlag) && (this->index == 6)) {
+    } else if((this->state == STATE_DATA_LEN) && (this->index == 6)) {
         //Take a High 16-bits of image length !
         this->len[3] = this->previousData;
         this->len[2] = this->data;
         size |= (((uint32_t) this->len[3]) << 24);
         size |= (((uint32_t) this->len[2])<<16);
-    } else if((this->flag == dataLenFlag) && (this->index == 8)) {
+    } else if((this->state == STATE_DATA_LEN) && (this->index == 8)) {
       //Take a Low 16-bits of image length & Finish the getLen !
         this->len[1] = this->previousData;
         this->len[0] = this->data;
         size |= (this->len[1]<<8);
         size |= this->len[0];
         this->imageSize = size;
-        this->flag = 0;
+        this->state = STATE_IDLE;
         this->index = 0;
         if(this->atOnce == 1) { getImage(NULL); }
         continue;
     }
 //============================== save the imageBuf or get the version ============================
-      else if (this->flag == imageFlag && (this->index > 4) &&
+      else if (this->state == STATE_IMAGE && (this->index > 4) &&
               (this->index <= (this->imageSize+4))) {
 
         this->imageBuf[this->imageIndex++] = this->data;
 
-    } else if (this->flag == getVerFlag && (this->index > 4) &&
+    } else if (this->state == STATE_GET_VER && (this->index > 4) &&
             (this->index <= 14)) {
 
         this->version[this->versionIndex++] = this->data;
@@ -149,12 +149,12 @@ void VC0706::eventDataReceived()
               printf("%c",this->version[i]);
               if(i==10) {printf("\n" );}
           }
-          this->flag = 0;
+          this->state = STATE_IDLE;
           this->index = 0;
           this->versionIndex = 0;
         }
 
-    } else if (this->flag == imageFlag && ((this->index)==(this->imageSize+6)) &&
+    } else if (this->state == STATE_IMAGE && ((this->index)==(this->imageSize+6)) &&
               (this->data == 0x00) && (previousData ==0x76)) {
         if (this->takePictureCallback != NULL) {
           System.feedWatchdog();
@@ -163,11 +163,11 @@ void VC0706::eventDataReceived()
 
         dynamicFree(this->imageBuf);
         this->imageBuf = NULL;
-    } else if ( (this->flag == imageFlag) && ((this->imageSize+9)==this->index) &&
+    } else if ( (this->state == STATE_IMAGE) && ((this->imageSize+9)==this->index) &&
                 (this->data == 0x00) && (previousData ==0x00)){
         //Finish the getImage & Start the recoverFrame !
         this->index = 0;
-        this->flag = 0;
+        this->state = STATE_IDLE;
         this->imageIndex = 0;
         this->imageSize = 0;
         this->len[0] = 0;
@@ -194,7 +194,7 @@ void VC0706::sendData(char *args, uint8_t Len)
 
 void VC0706::takePicture(void (*func)(const char *buf, uint32_t size), uint8_t compRatio)
 {
-  if (this->flag == 0) {
+  if (this->state == STATE_IDLE) {
     if(this->checkSetedRatio != 1 ){
       //If you set the compression ratio, Start the setRatio function !
       this->takePictureCallback = func;
@@ -216,7 +216,7 @@ void VC0706::takePicture(void (*func)(const char *buf, uint32_t size), uint8_t c
 void VC0706::stopFrame()
 {
   //Captures the current frame
-  this->flag |= stopFrameFlag;
+  this->state = STATE_STOP_FRAME;
   char args[] = {0x56, 0x00, 0x36, 0x01, 0x00};
   sendData(args, sizeof(args));
 }
@@ -224,7 +224,7 @@ void VC0706::stopFrame()
 void VC0706::getLen()
 {
   //Take a length
-  this->flag |= dataLenFlag;
+  this->state = STATE_DATA_LEN;
   char args[] = {0x56, 0x00, 0x34, 0x01, 0x00};
   sendData(args, sizeof(args));
 }
@@ -237,7 +237,7 @@ void VC0706::getImage(void (*func)(const char *buf, uint32_t size))
   if( (this->imageBuf == NULL)){
     //Not enough memory
     this->index = 0;
-    this->flag = 0;
+    this->state = STATE_IDLE;
     this->imageIndex = 0;
     this->imageSize = 0;
     this->len[0] = 0;
@@ -265,7 +265,7 @@ void VC0706::getImage(void (*func)(const char *buf, uint32_t size))
   }
   else {
     //Take a image data
-    this->flag |= imageFlag;
+    this->state = STATE_IMAGE;
     char args[] = {0x56, 0x00, 0x32, 0x0C, 0x00, 0x0A, 0x00, 0x00, 0x00, 0x00,
                    this->len[3], this->len[2], this->len[1], this->len[0], 0x00, 0x0A};
     sendData(args, sizeof(args));
@@ -275,7 +275,7 @@ void VC0706::getImage(void (*func)(const char *buf, uint32_t size))
 void VC0706::getVer()
 {
   //Take a Version
-  this->flag |= getVerFlag;
+  this->state = STATE_GET_VER;
   char args[] = {0x56, 0x00, 0x11, 0x00};
   sendData(args, sizeof(args));
 }
@@ -287,7 +287,7 @@ void VC0706::reset()
     this->data = this->port->read();
   }
   
-  this->flag |= resetFlag;
+  this->state = STATE_RESET;
   this->data = 0;
   this->index = 0;
   char args[] = {0x56, 0x00, 0x26, 0x00};
@@ -298,7 +298,7 @@ void VC0706::setRatio(void (*func)(), uint8_t compRatio)
 {
   retry.onFired(reStart, this);
   retry.startOneShot(10000);
-  this->flag |= compressionFlag;
+  this->state = STATE_COMPRESSION;
   this->setRatioCallback = func;
   this->ratio = compRatio;
   char args[] = {0x56, 0x00, 0x31, 0x05, 0x01, 0x01, 0x12, 0x04, this->ratio};
@@ -310,7 +310,7 @@ void VC0706::recoverFrame(void (*func)(), void *ctx )
   //Recover Frame for next picture
   VC0706 *vC0706 = (VC0706 *)ctx;
   vC0706->recoverFrameCallback = func;
-  vC0706->flag |= recoverFlag;
+  vC0706->state = STATE_RECOVER;
   char args[] = {0x56, 0x00, 0x36, 0x01, 0x03};
   vC0706->sendData(args, sizeof(args));
 }
@@ -318,7 +318,7 @@ void VC0706::recoverFrame(void (*func)(), void *ctx )
 void VC0706::setMotionCtrl(uint8_t len, uint8_t motionAttribute, uint8_t ctrlItme, uint8_t firstBit, uint8_t secondBit)
 {
   //Set the motion control
-  this->flag |= motionCtrlFlag;
+  this->state = STATE_MOTION_CTRL;
   if(ctrlItme==1 ) {
     char args[] = {0x56, 0x00, 0x42, len, motionAttribute, ctrlItme, firstBit, secondBit};
     this->motionCycle |= (firstBit<<8);
@@ -333,7 +333,7 @@ void VC0706::setMotionCtrl(uint8_t len, uint8_t motionAttribute, uint8_t ctrlItm
 void VC0706::startCapture(void (*func)(), uint16_t cycle)
 {
   //Start a capture
-  this->flag |= captureFlag;
+  this->state = STATE_CAPTURE;
   this->successCapture = func;
   captureCycle.onFired(motionStatus,this);
   captureCycle.startPeriodic(cycle);
@@ -350,7 +350,7 @@ void VC0706::motionStatus(void *ctx)
 void VC0706::endCapture()
 {
   //if you want to exit startCapture, run the endCapture()
-  this->flag = 0;
+  this->state = STATE_IDLE;
   this->index = 0;
   captureCycle.stop();
 }
@@ -358,7 +358,7 @@ void VC0706::endCapture()
 void VC0706::reStart(void *ctx)
 {
   VC0706 *vC0706 = (VC0706 *) ctx;
-  vC0706->flag = 0;
+  vC0706->state = STATE_IDLE;
   vC0706->index = 0;
   vC0706->setRatio(NULL, vC0706->ratio);
 }

@@ -1,17 +1,14 @@
 #include <cox.h>
 #include "VC0706.hpp"
 
-VC0706::VC0706(SerialPort &p)
-{
-  this->port = &p;
-  this->index = 0;
+VC0706::VC0706(SerialPort &p) : port(p) {
 }
 
 void VC0706::begin()
 {
-  this->port->begin(38400);
-  this->port->onReceive(SerialDataReceived, this);
-  this->port->listen();
+  this->port.begin(38400);
+  this->port.onReceive(SerialDataReceived, this);
+  this->port.listen();
 }
 
 void VC0706::SerialDataReceived(void *ctx)
@@ -22,8 +19,8 @@ void VC0706::SerialDataReceived(void *ctx)
 
 void VC0706::eventDataReceived()
 {
-  while(this->port->available()>0) {
-    this->data = this->port->read();
+  while(this->port.available()>0) {
+    this->data = this->port.read();
 //===================== check returnSign & serialNumber ======================
     if ((this->index == 0 && this->data != returnSign) ||
         (this->index == 1 && this->data != serialNumber)) {
@@ -188,7 +185,7 @@ void VC0706::eventDataReceived()
 void VC0706::sendData(char *args, uint8_t Len)
 {
   for(int j=0; j<Len; j++,args++){
-    this->port->write(*args);
+    this->port.write(*args);
   }
 }
 
@@ -283,8 +280,8 @@ void VC0706::getVer()
 void VC0706::reset()
 {
   //System reset
-  while(this->port->available()>0){
-    this->data = this->port->read();
+  while(this->port.available()>0){
+    this->data = this->port.read();
   }
   
   this->state = STATE_RESET;

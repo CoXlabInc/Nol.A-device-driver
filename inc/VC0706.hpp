@@ -48,8 +48,8 @@ private:
   uint8_t len[4] = {0,};
   uint8_t data = 0;
   uint8_t previousData = 0;
-  uint16_t index = 0;
-  uint16_t imageIndex = 0;
+  uint32_t index = 0;
+  uint32_t imageIndex = 0;
   uint32_t motionCycle = 0;
   int16_t prevRatio = -1;
   char *imageBuf = NULL;

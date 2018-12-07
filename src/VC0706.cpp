@@ -56,7 +56,9 @@ void VC0706::eventDataReceived() {
           callback(this->callbackArgOnRatioSet);
         }
         if (this->callbackOnRecoverFrame != nullptr) {
-          this->callbackOnRecoverFrame(this->callbackArgOnRecoverFrame);
+          void (*callback)(void *) = this->callbackOnRecoverFrame;
+          this->callbackOnRecoverFrame = nullptr;
+          callback(this->callbackArgOnRecoverFrame);
         }
         continue;
     } else if((this->state == STATE_DATA_LEN) && (this->index == 4) &&
@@ -94,7 +96,9 @@ void VC0706::eventDataReceived() {
         this->state = STATE_IDLE;
         this->index = 0;
         if (this->callbackOnCaptured) {
-          this->callbackOnCaptured(this->callbackArgOnCaptured);
+          void (*callback)(void *) = this->callbackOnCaptured;
+          this->callbackOnCaptured = nullptr;
+          callback(this->callbackArgOnCaptured);
         }
         continue;
     } else if((this->state == STATE_CAPTURE) && (this->index == 6) &&
@@ -151,23 +155,21 @@ void VC0706::eventDataReceived() {
     } else if (this->state == STATE_IMAGE && ((this->index)==(this->imageSize+6)) &&
               (this->data == 0x00) && (previousData ==0x76)) {
         if (!postTask([](void *ctx) {
-                       VC0706 *cam = (VC0706 *) ctx;
-                       if (cam->callbackOnPictureTaken) {
-                         cam->callbackOnPictureTaken(cam->callbackArgOnPictureTaken,
-                                                     cam->imageBuf,
-                                                     cam->imageSize);
-                         dynamicFree(cam->imageBuf);
-                         cam->imageBuf = nullptr;
-                         cam->imageSize = 0;
-                       }
-                     }, this)) {
+                        VC0706 *cam = (VC0706 *) ctx;
+                        if (cam->callbackOnPictureTaken) {
+                          cam->callbackOnPictureTaken(cam->callbackArgOnPictureTaken,
+                                                      cam->imageBuf,
+                                                      cam->imageSize);
+                          dynamicFree(cam->imageBuf);
+                          cam->imageBuf = nullptr;
+                        }
+                      }, this)) {
           dynamicFree(this->imageBuf);
           this->imageBuf = nullptr;
-          this->imageSize = 0;
         }
-    } else if ( (this->state == STATE_IMAGE) && ((this->imageSize+9)==this->index) &&
-                (this->data == 0x00) && (previousData ==0x00)){
         //Finish the getImage & Start the recoverFrame !
+    } else if (this->state == STATE_IMAGE &&
+               this->index == this->imageSize + 9) {
         this->index = 0;
         this->state = STATE_IDLE;
         this->imageIndex = 0;

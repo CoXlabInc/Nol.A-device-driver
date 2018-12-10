@@ -61,6 +61,7 @@ void PMS3003::eventSensorDataReceived() {
     if ((this->index == 0 && c != 0x42) ||
         (this->index == 1 && c != 0x4d)) {
       this->index = 0;
+      this->checkCode = 0;
       continue;
 
     } else if (this->index == 2 ||
@@ -69,7 +70,8 @@ void PMS3003::eventSensorDataReceived() {
                this->index == 8 ||
                this->index == 10 ||
                this->index == 12 ||
-               this->index == 14) {
+               this->index == 14 ||
+               this->index == 22) {
       this->high = c;
     } else if (this->index == 3) {
       uint16_t frameLength = (this->high << 8) | c;
@@ -90,10 +92,20 @@ void PMS3003::eventSensorDataReceived() {
       this->measured[4] = (this->high << 8) | c;
     } else if (this->index == 15) {
       this->measured[5] = (this->high << 8) | c;
-    } else if (this->index == 23) {
-      this->index = 0;
+    }
+
+    if (this->index == 23) {
+      uint16_t checkCodeExpected = (this->high << 8) | c;
 
       if (this->callback) {
+        if (checkCodeExpected != this->checkCode) {
+          this->measured[0] = -1;
+          this->measured[1] = -1;
+          this->measured[2] = -1;
+          this->measured[3] = -1;
+          this->measured[4] = -1;
+          this->measured[5] = -1;
+        }
         this->callback(this->measured[0],
                        this->measured[1],
                        this->measured[2],
@@ -101,9 +113,16 @@ void PMS3003::eventSensorDataReceived() {
                        this->measured[4],
                        this->measured[5]);
       }
-      continue;
+
+      this->index = 0;
+      this->checkCode = 0;
+    } else {
+      this->index++;
+
+      if (this->index < 22) {
+        this->checkCode += c;
+      }
     }
-    this->index++;
   }
 }
 

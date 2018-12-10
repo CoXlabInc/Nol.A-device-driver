@@ -54,6 +54,7 @@ protected:
   SerialPort &p;
   const int pinSet, pinReset;
   uint8_t index = 0, high = 0;
+  uint16_t checkCode;
 
   virtual void eventSensorDataReceived();
 

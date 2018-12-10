@@ -58,7 +58,6 @@ protected:
 
 private:
   value_t sensingValue;
-  uint16_t checkCode;
 };
 
 #endif //PMS7003_HPP

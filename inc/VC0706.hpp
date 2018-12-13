@@ -13,16 +13,15 @@ public:
   void stopFrame();
   void getLen();
   void getImage();
-  void getImage(void (*func)(const char *buf, uint32_t size));
   void reset();
   void startCapture(uint16_t cycle,
-                    void (*func)(void *) = nullptr,
+                    void (*func)(void *, bool) = nullptr,
                     void *arg = nullptr);
   void endCapture();
   void setMotionCtrl (uint8_t len, uint8_t motionAttribute, uint8_t ctrlItme, uint8_t secondBit, uint8_t thirdBit=0);
   void sendData(char *args, uint8_t Len);
 
-  void recoverFrame(void (*func)(void *) = nullptr, void *arg = nullptr);
+  void recoverFrame(void (*func)(void *, bool) = nullptr, void *arg = nullptr);
   void checkMotionStatus();
   void restart();
 
@@ -30,7 +29,7 @@ public:
 private:
   SerialPort &port;
   Timer captureCycle;
-  Timer retry;
+  Timer commandTimeout;
 
   enum state { STATE_IDLE = 0,
                STATE_STOP_FRAME = 1,
@@ -60,14 +59,14 @@ private:
   uint32_t imageSize = 0;
 
   void eventDataReceived();
-  void (*callbackOnCaptured)(void *) = nullptr;
+  void (*callbackOnCaptured)(void *, bool success) = nullptr;
   void *callbackArgOnCaptured = nullptr;
-  void (*callbackOnRecoverFrame)(void *) = nullptr;
+  void (*callbackOnRecoverFrame)(void *, bool success) = nullptr;
   void *callbackArgOnRecoverFrame = nullptr;
-  void (*callbackOnRatioSet)(void *) = nullptr;
+  void (*callbackOnRatioSet)(void *, bool success) = nullptr;
   void *callbackArgOnRatioSet = nullptr;
   void (*callbackOnPictureTaken)(void *, const char *buf, uint32_t size) = nullptr;
   void *callbackArgOnPictureTaken = nullptr;
 
-  void setRatio(uint8_t compRatio, void (*func)(void *) = nullptr, void *arg = nullptr);
+  void setRatio(uint8_t compRatio, void (*func)(void *, bool) = nullptr, void *arg = nullptr);
 };

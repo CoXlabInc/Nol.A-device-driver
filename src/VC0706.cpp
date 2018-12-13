@@ -40,6 +40,7 @@ void VC0706::eventDataReceived() {
     } else if((this->state == STATE_STOP_FRAME) && (this->index == 4) &&
             (this->previousData == 0x00) && (this->data == 0x00)) {
         //Finish the stopFrame !
+        commandTimeout.stop();
         this->index = 0;
         this->state = STATE_IDLE;
         getLen();
@@ -47,27 +48,32 @@ void VC0706::eventDataReceived() {
     } else if((this->state == STATE_RECOVER) && (this->index == 4) &&
             (this->previousData == 0x00) && (this->data == 0x00)) {
         //Finish recoverFrame !
+        commandTimeout.stop();
         this->index = 0;
         this->state = STATE_IDLE;
         delay(100);
         if (this->callbackOnRatioSet != nullptr){
-          void (*callback)(void *) = this->callbackOnRatioSet;
+          void (*callback)(void *, bool) = this->callbackOnRatioSet;
           this->callbackOnRatioSet = nullptr;
-          callback(this->callbackArgOnRatioSet);
+          callback(this->callbackArgOnRatioSet, true);
         }
         if (this->callbackOnRecoverFrame != nullptr) {
-          void (*callback)(void *) = this->callbackOnRecoverFrame;
+          void (*callback)(void *, bool) = this->callbackOnRecoverFrame;
           this->callbackOnRecoverFrame = nullptr;
-          callback(this->callbackArgOnRecoverFrame);
+          callback(this->callbackArgOnRecoverFrame, true);
         }
         continue;
     } else if((this->state == STATE_DATA_LEN) && (this->index == 4) &&
             (this->previousData != 0x00) && (this->data != 0x04)) {
+        commandTimeout.stop();
+        commandTimeout.fire();
         this->index = 0;
         this->state = STATE_IDLE;
         continue;
     } else if((this->state == STATE_IMAGE) && (this->index == 4) &&
             (this->previousData != 0x00) && (this->data != 0x00)) {
+        commandTimeout.stop();
+        commandTimeout.fire();
         this->index = 0;
         this->state = STATE_IDLE;
         recoverFrame();
@@ -81,13 +87,15 @@ void VC0706::eventDataReceived() {
     } else if((this->state == STATE_COMPRESSION) && (this->index == 4) &&
               (this->previousData == 0x00) && (this->data == 0x00)){
         //Finish the setRatio & Start recoverFrame !
-        retry.stop();
+        commandTimeout.stop();
         this->index = 0;
         this->state = STATE_IDLE;
         recoverFrame();
         continue;
     } else if((this->state == STATE_IMAGE) && (this->index == 6) &&
               (this->previousData != 0xFF) && (this->data != 0xD8)) {
+        commandTimeout.stop();
+        commandTimeout.fire();
         this->index = 0;
         this->state = STATE_IDLE;
         continue;
@@ -95,10 +103,10 @@ void VC0706::eventDataReceived() {
               (this->previousData == 0x01) && (this->data == 0x11)) {
         this->state = STATE_IDLE;
         this->index = 0;
-        if (this->callbackOnCaptured) {
-          void (*callback)(void *) = this->callbackOnCaptured;
-          this->callbackOnCaptured = nullptr;
-          callback(this->callbackArgOnCaptured);
+        void (*callback)(void *, bool) = this->callbackOnCaptured;
+        this->callbackOnCaptured = nullptr;
+        if (callback) {
+          callback(this->callbackArgOnCaptured, true);
         }
         continue;
     } else if((this->state == STATE_CAPTURE) && (this->index == 6) &&
@@ -119,7 +127,8 @@ void VC0706::eventDataReceived() {
         size |= (((uint32_t) this->len[3]) << 24);
         size |= (((uint32_t) this->len[2])<<16);
     } else if((this->state == STATE_DATA_LEN) && (this->index == 8)) {
-      //Take a Low 16-bits of image length & Finish the getLen !
+        commandTimeout.stop();
+        //Take a Low 16-bits of image length & Finish the getLen !
         this->len[1] = this->previousData;
         this->len[0] = this->data;
         size |= (this->len[1]<<8);
@@ -127,7 +136,7 @@ void VC0706::eventDataReceived() {
         this->imageSize = size;
         this->state = STATE_IDLE;
         this->index = 0;
-        getImage(NULL);
+        getImage();
         continue;
     }
 //============================== save the imageBuf or get the version ============================
@@ -156,20 +165,29 @@ void VC0706::eventDataReceived() {
               (this->data == 0x00) && (previousData ==0x76)) {
         if (!postTask([](void *ctx) {
                         VC0706 *cam = (VC0706 *) ctx;
-                        if (cam->callbackOnPictureTaken) {
-                          cam->callbackOnPictureTaken(cam->callbackArgOnPictureTaken,
-                                                      cam->imageBuf,
-                                                      cam->imageSize);
+                        void (*callback)(void *, const char *, uint32_t) = cam->callbackOnPictureTaken;
+                        cam->callbackOnPictureTaken = nullptr;
+                        if (callback) {
+                          callback(cam->callbackArgOnPictureTaken,
+                                   cam->imageBuf,
+                                   cam->imageSize);
                           dynamicFree(cam->imageBuf);
                           cam->imageBuf = nullptr;
                         }
                       }, this)) {
           dynamicFree(this->imageBuf);
           this->imageBuf = nullptr;
+
+          void (*callback)(void *, const char *, uint32_t) = this->callbackOnPictureTaken;
+          this->callbackOnPictureTaken = nullptr;
+          if (callback) {
+            callback(this->callbackArgOnPictureTaken, nullptr, 0);
+          }
         }
-        //Finish the getImage & Start the recoverFrame !
     } else if (this->state == STATE_IMAGE &&
                this->index == this->imageSize + 9) {
+        //Finish the getImage & Start the recoverFrame !
+        commandTimeout.stop();
         this->index = 0;
         this->state = STATE_IDLE;
         this->imageIndex = 0;
@@ -202,8 +220,10 @@ void VC0706::takePicture(void (*func)(void *arg, const char *buf, uint32_t size)
     if(this->ratio != this->prevRatio){
       //If you set the compression ratio, Start the setRatio function !
       setRatio(ratio,
-               [](void *ctx) {
-                 ((VC0706 *) ctx)->stopFrame();
+               [](void *ctx, bool success) {
+                 if (success) {
+                   ((VC0706 *) ctx)->stopFrame();
+                 }
                },
                this);
       this->prevRatio = this->ratio;
@@ -222,6 +242,16 @@ void VC0706::stopFrame()
   this->state = STATE_STOP_FRAME;
   char args[] = {0x56, 0x00, 0x36, 0x01, 0x00};
   sendData(args, sizeof(args));
+
+  commandTimeout.onFired([](void *ctx) {
+                           VC0706 *cam = (VC0706 *) ctx;
+                           void (*callback)(void *, const char *, uint32_t) = cam->callbackOnPictureTaken;
+                           cam->callbackOnRatioSet = nullptr;
+                           if (callback) {
+                             callback(cam->callbackArgOnPictureTaken, nullptr, 0);
+                           }
+                         }, this);
+  commandTimeout.startOneShot(10000);
 }
 
 void VC0706::getLen()
@@ -230,10 +260,19 @@ void VC0706::getLen()
   this->state = STATE_DATA_LEN;
   char args[] = {0x56, 0x00, 0x34, 0x01, 0x00};
   sendData(args, sizeof(args));
+
+  commandTimeout.onFired([](void *ctx) {
+                           VC0706 *cam = (VC0706 *) ctx;
+                           void (*callback)(void *, const char *, uint32_t) = cam->callbackOnPictureTaken;
+                           cam->callbackOnRatioSet = nullptr;
+                           if (callback) {
+                             callback(cam->callbackArgOnPictureTaken, nullptr, 0);
+                           }
+                         }, this);
+  commandTimeout.startOneShot(10000);
 }
 
-void VC0706::getImage(void (*func)(const char *buf, uint32_t size))
-{
+void VC0706::getImage() {
   //Take a image data
   this->imageBuf = (char *) dynamicMalloc(this->imageSize);
 
@@ -272,6 +311,16 @@ void VC0706::getImage(void (*func)(const char *buf, uint32_t size))
     char args[] = {0x56, 0x00, 0x32, 0x0C, 0x00, 0x0A, 0x00, 0x00, 0x00, 0x00,
                    this->len[3], this->len[2], this->len[1], this->len[0], 0x00, 0x0A};
     sendData(args, sizeof(args));
+
+    commandTimeout.onFired([](void *ctx) {
+                             VC0706 *cam = (VC0706 *) ctx;
+                             void (*callback)(void *, const char *, uint32_t) = cam->callbackOnPictureTaken;
+                             cam->callbackOnRatioSet = nullptr;
+                             if (callback) {
+                               callback(cam->callbackArgOnPictureTaken, nullptr, 0);
+                             }
+                           }, this);
+    commandTimeout.startOneShot(10000);
   }
 }
 
@@ -297,25 +346,41 @@ void VC0706::reset()
   sendData(args, sizeof(args));
 }
 
-void VC0706::setRatio(uint8_t compRatio, void (*func)(void *), void *arg) {
-  retry.onFired([](void *ctx) {
-                  ((VC0706 *) ctx)->restart();
-                }, this);
-  retry.startOneShot(10000);
+void VC0706::setRatio(uint8_t compRatio, void (*func)(void *, bool), void *arg) {
   this->state = STATE_COMPRESSION;
   this->callbackOnRatioSet = func;
   this->callbackArgOnRatioSet = arg;
   this->ratio = compRatio;
   char args[] = {0x56, 0x00, 0x31, 0x05, 0x01, 0x01, 0x12, 0x04, this->ratio};
   this->sendData(args, sizeof(args));
+
+  commandTimeout.onFired([](void *ctx) {
+                           VC0706 *cam = (VC0706 *) ctx;
+                           void (*callback)(void *, bool) = cam->callbackOnRatioSet;
+                           cam->callbackOnRatioSet = nullptr;
+                           if (callback) {
+                             callback(cam->callbackArgOnRatioSet, false);
+                           }
+                         }, this);
+  commandTimeout.startOneShot(10000);
 }
 
-void VC0706::recoverFrame(void (*func)(void *), void *ctx) {
+void VC0706::recoverFrame(void (*func)(void *, bool), void *ctx) {
   this->callbackOnRecoverFrame = func;
   this->callbackArgOnRecoverFrame = ctx;
   this->state = STATE_RECOVER;
   char args[] = {0x56, 0x00, 0x36, 0x01, 0x03};
   this->sendData(args, sizeof(args));
+
+  commandTimeout.onFired([](void *ctx) {
+                           VC0706 *cam = (VC0706 *) ctx;
+                           void (*callback)(void *, bool) = cam->callbackOnRecoverFrame;
+                           cam->callbackOnRecoverFrame = nullptr;
+                           if (callback) {
+                             callback(cam->callbackArgOnRecoverFrame, false);
+                           }
+                         }, this);
+  commandTimeout.startOneShot(10000);
 }
 
 void VC0706::setMotionCtrl(uint8_t len, uint8_t motionAttribute, uint8_t ctrlItme, uint8_t firstBit, uint8_t secondBit)
@@ -333,7 +398,7 @@ void VC0706::setMotionCtrl(uint8_t len, uint8_t motionAttribute, uint8_t ctrlItm
   }
 }
 
-void VC0706::startCapture(uint16_t periodMillis, void (*func)(void *), void *ctx) {
+void VC0706::startCapture(uint16_t periodMillis, void (*func)(void *, bool), void *ctx) {
   //Start a capture
   this->state = STATE_CAPTURE;
   this->callbackOnCaptured = func;

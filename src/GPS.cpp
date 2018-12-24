@@ -28,6 +28,8 @@
  */
 
 #include "GPS.hpp"
+#include <stdlib.h>
+#include <string.h>
 
 void Gps::onReadDone(void (*func)(uint8_t fixQuality,
                                   uint8_t hour,
@@ -93,7 +95,7 @@ uint8_t Gps::ParseGGA(const char *msg,
   }
   msg += len + 1;
 
-  tmp = strtoul(buf, NULL, 10);
+  tmp = strtoul(buf, nullptr, 10);
 
   if (hour) {
     *hour = tmp / 10000;
@@ -117,7 +119,7 @@ uint8_t Gps::ParseGGA(const char *msg,
   msg += len + 1;
 
   if (subsec) {
-    *subsec = strtoul(buf, NULL, 10);
+    *subsec = strtoul(buf, nullptr, 10);
   }
   // printf("(GGA2):%s\n", buf);
 
@@ -129,7 +131,7 @@ uint8_t Gps::ParseGGA(const char *msg,
   msg += len + 1;
 
   if (latitude) {
-    *latitude = strtoul(buf, NULL, 10) * 100000;
+    *latitude = strtoul(buf, nullptr, 10) * 100000;
   }
   // printf("(GGA3):%s\n", buf);
 
@@ -140,7 +142,7 @@ uint8_t Gps::ParseGGA(const char *msg,
   msg += len + 1;
 
   if (latitude) {
-    *latitude += strtoul(buf, NULL, 10);
+    *latitude += strtoul(buf, nullptr, 10);
   }
   // printf("(GGA4):%s\n", buf);
 
@@ -164,7 +166,7 @@ uint8_t Gps::ParseGGA(const char *msg,
   msg += len + 1;
 
   if (longitude) {
-    *longitude = strtoul(buf, NULL, 10) * 100000;
+    *longitude = strtoul(buf, nullptr, 10) * 100000;
   }
   // printf("(GGA6):%s\n", buf);
 
@@ -175,7 +177,7 @@ uint8_t Gps::ParseGGA(const char *msg,
   msg += len + 1;
 
   if (longitude) {
-    *longitude += strtoul(buf, NULL, 10);
+    *longitude += strtoul(buf, nullptr, 10);
   }
   // printf("(GGA7):%s\n", buf);
 
@@ -198,7 +200,7 @@ uint8_t Gps::ParseGGA(const char *msg,
   }
   msg += len + 1;
 
-  fixQuality = strtoul(buf, NULL, 10);
+  fixQuality = strtoul(buf, nullptr, 10);
   // printf("(GGA9):%s\n", buf);
 
   /* Number of satellites */
@@ -209,7 +211,7 @@ uint8_t Gps::ParseGGA(const char *msg,
   msg += len + 1;
 
   if (numSat) {
-    *numSat = strtoul(buf, NULL, 10);
+    *numSat = strtoul(buf, nullptr, 10);
   }
   // printf("(GGA10):%s\n", buf);
 
@@ -233,7 +235,7 @@ uint8_t Gps::ParseGGA(const char *msg,
   msg += len + 1;
 
   if (altitude) {
-    *altitude = strtoul(buf, NULL, 10) * 10;
+    *altitude = strtoul(buf, nullptr, 10) * 10;
   }
   // printf("(GGA12):%s\n", buf);
 
@@ -244,7 +246,7 @@ uint8_t Gps::ParseGGA(const char *msg,
   msg += len + 1;
 
   if (altitude) {
-    *altitude += strtoul(buf, NULL, 10);
+    *altitude += strtoul(buf, nullptr, 10);
   }
   // printf("(GGA13):%s\n", buf);
 
@@ -264,7 +266,7 @@ uint8_t Gps::ParseGGA(const char *msg,
   msg += len + 1;
 
   if (sep) {
-    *sep = strtoul(buf, NULL, 10) * 10;
+    *sep = strtoul(buf, nullptr, 10) * 10;
   }
   // printf("(GGA15):%s\n", buf);
 
@@ -275,7 +277,7 @@ uint8_t Gps::ParseGGA(const char *msg,
   msg += len + 1;
 
   if (sep) {
-    *sep += strtoul(buf, NULL, 10);
+    *sep += strtoul(buf, nullptr, 10);
   }
   // printf("(GGA16):%s\n", buf);
 
@@ -358,7 +360,7 @@ bool Gps::ParseGSA(const char *msg,
   msg += len + 1;
 
   if (navMode) {
-    *navMode = strtoul(buf, NULL, 10);
+    *navMode = strtoul(buf, nullptr, 10);
     // printf("%s():opMode:%u\n", __func__, *navMode);
   }
 
@@ -373,14 +375,14 @@ bool Gps::ParseGSA(const char *msg,
   msg += len + 1;
 
   if (pdop) {
-    *pdop = strtoul(buf, NULL, 10);
+    *pdop = strtoul(buf, nullptr, 10);
   }
 
   len = CopyStringUntil(buf, msg, ',', sizeof(buf));
   msg += len + 1;
 
   if (pdop) {
-    float m = (float) strtoul(buf, NULL, 10);
+    float m = (float) strtoul(buf, nullptr, 10);
 
     while (len-- > 0) {
       m /= 10.;
@@ -396,14 +398,14 @@ bool Gps::ParseGSA(const char *msg,
   msg += len + 1;
 
   if (hdop) {
-    *hdop = strtoul(buf, NULL, 10);
+    *hdop = strtoul(buf, nullptr, 10);
   }
 
   len = CopyStringUntil(buf, msg, ',', sizeof(buf));
   msg += len + 1;
 
   if (hdop) {
-    float m = (float) strtoul(buf, NULL, 10);
+    float m = (float) strtoul(buf, nullptr, 10);
 
     while (len-- > 0) {
       m /= 10.;
@@ -419,14 +421,14 @@ bool Gps::ParseGSA(const char *msg,
   msg += len + 1;
 
   if (vdop) {
-    *vdop = strtoul(buf, NULL, 10);
+    *vdop = strtoul(buf, nullptr, 10);
   }
 
   len = CopyStringUntil(buf, msg, '*', sizeof(buf));
   msg += len + 1;
 
   if (vdop) {
-    float m = (float) strtoul(buf, NULL, 10);
+    float m = (float) strtoul(buf, nullptr, 10);
 
     while (len-- > 0) {
       m /= 10.;
@@ -508,14 +510,14 @@ bool Gps::ParseRMC(
   msg += len + 1;
 
   if (spd) {
-    *spd = strtoul(buf, NULL, 10);
+    *spd = strtoul(buf, nullptr, 10);
   }
 
   len = CopyStringUntil(buf, msg, ',', sizeof(buf));
   msg += len + 1;
 
   if (spd) {
-    float m = (float) strtoul(buf, NULL, 10);
+    float m = (float) strtoul(buf, nullptr, 10);
 
     while (len-- > 0) {
       m /= 10.;
@@ -529,14 +531,14 @@ bool Gps::ParseRMC(
   msg += len + 1;
 
   if (cog) {
-    *cog = strtoul(buf, NULL, 10);
+    *cog = strtoul(buf, nullptr, 10);
   }
 
   len = CopyStringUntil(buf, msg, ',', sizeof(buf));
   msg += len + 1;
 
   if (cog) {
-    float m = (float) strtoul(buf, NULL, 10);
+    float m = (float) strtoul(buf, nullptr, 10);
 
     while (len-- > 0) {
       m /= 10.;

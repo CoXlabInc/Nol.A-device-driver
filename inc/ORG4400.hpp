@@ -31,6 +31,7 @@
 #define ORG4400_HPP
 
 #include <GPS.hpp>
+#include <SerialPort.hpp>
 
 class ORG4400 : public Gps {
 public:

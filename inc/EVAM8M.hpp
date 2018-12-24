@@ -31,6 +31,7 @@
 #define EVAM8M_HPP
 
 #include <GPS.hpp>
+#include <SerialPort.hpp>
 
 class EVAM8M : public Gps {
 public:

@@ -31,6 +31,7 @@
 #define MT3339_HPP
 
 #include <GPS.hpp>
+#include <SerialPort.hpp>
 
 class MT3339 : public Gps {
 public:

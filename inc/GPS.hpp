@@ -30,7 +30,8 @@
 #ifndef GPS_HPP
 #define GPS_HPP
 
-#include <cox.h>
+#include <stdint.h>
+#include <stdbool.h>
 
 class Gps {
 public:

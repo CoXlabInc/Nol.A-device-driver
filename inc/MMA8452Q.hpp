@@ -30,7 +30,8 @@
 #ifndef MMA8452Q_HPP
 #define MMA8452Q_HPP
 
-#include <cox.h>
+#include <stdint.h>
+#include <TwoWire.hpp>
 
 class MMA8452Q {
 public:

@@ -1,4 +1,9 @@
-#include "cox.h"
+#ifndef SPARKFUN_CCS811_HPP
+#define SPARKFUN_CCS811_HPP
+
+#include <nola-common.h>
+#include <TwoWire.hpp>
+
 //Register addresses
 #define CSS811_void 0x00
 #define CSS811_MEAS_MODE 0x01
@@ -60,3 +65,5 @@ private:
 	uint16_t tVOC;
 	uint16_t CO2e;
 };
+
+#endif //SPARKFUN_CCS811_HPP

@@ -1,4 +1,9 @@
-#include <cox.h>
+#ifndef VC0706_HPP
+#define VC0706_HPP
+
+#include <nola-common.h>
+#include <Timer.hpp>
+#include <SerialPort.hpp>
 
 #define returnSign 0x76
 #define serialNumber 0x00
@@ -70,3 +75,5 @@ private:
 
   void setRatio(uint8_t compRatio, void (*func)(void *, bool) = nullptr, void *arg = nullptr);
 };
+
+#endif //VC0706_HPP

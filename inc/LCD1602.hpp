@@ -1,4 +1,8 @@
-#include <cox.h>
+#ifndef LCD1602_HPP
+#define LCD1602_HPP
+
+#include <stdint.h>
+#include <TwoWire.hpp>
 
 #define LCD_CLEARDISPLAY 0x01
 #define LCD_RETURNHOME 0x02
@@ -75,3 +79,5 @@ private:
   uint8_t _displaycontrol;
   uint8_t _backlightval;
 };
+
+#endif //LCD1602_HPP

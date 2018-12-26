@@ -27,7 +27,8 @@
  * @date 2016. 6. 13.
  */
 
-#include "MMA8452Q.hpp"
+#include <MMA8452Q.hpp>
+#include <nola-common.h>
 
 void MMA8452Q::begin(TwoWire &w, uint8_t addr, int8_t pinInt1, int8_t pinInt2) {
   this->wire = &w;

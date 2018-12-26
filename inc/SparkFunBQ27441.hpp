@@ -38,7 +38,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 #ifndef SparkFunBQ27441_hpp
 #define SparkFunBQ27441_hpp
 
-#include <cox.h>
+#include <nola-common.h>
+#include <TwoWire.hpp>
 
 #define BQ72441_I2C_TIMEOUT 2000
 

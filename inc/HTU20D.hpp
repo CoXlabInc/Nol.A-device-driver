@@ -30,7 +30,9 @@
 #ifndef HTU20D_HPP
 #define HTU20D_HPP
 
-#include <cox.h>
+#include <stdint.h>
+#include <TwoWire.hpp>
+#include <Timer.hpp>
 
 class HTU20D {
 public:

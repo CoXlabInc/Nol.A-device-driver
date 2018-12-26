@@ -27,7 +27,7 @@
  * @date 2016. 6. 13.
  */
 
-#include "HTU20D.hpp"
+#include <HTU20D.hpp>
 
 void HTU20D::begin(TwoWire &w) {
   this->wire = &w;

@@ -115,13 +115,13 @@ void Adafruit_NeoPixel::show(void) {
   mask = 0x80;
 
   if (is800KHz) {
-    time0  = System.CLOCK_HZ / 2500000;
-    time1  = System.CLOCK_HZ / 1250000;
-    period = System.CLOCK_HZ / 8000000;
+    time0  = System.SYSTICK_HZ / 2500000;
+    time1  = System.SYSTICK_HZ / 1250000;
+    period = System.SYSTICK_HZ / 8000000;
   } else {
-    time0  = System.CLOCK_HZ / 2000000;
-    time1  = System.CLOCK_HZ / 833333;
-    period = System.CLOCK_HZ / 400000;
+    time0  = System.SYSTICK_HZ / 2000000;
+    time1  = System.SYSTICK_HZ / 833333;
+    period = System.SYSTICK_HZ / 400000;
   }
 
   noInterrupts();
@@ -132,12 +132,12 @@ void Adafruit_NeoPixel::show(void) {
       t = time0;
     }
 
-    startTime = System.getCycleCount();
+    startTime = System.getSystickCount();
     digitalWrite(pin, HIGH);
-    System.waitCycle(startTime, t);
+    System.waitSystick(startTime, t);
 
     digitalWrite(pin, LOW);
-    System.waitCycle(startTime, period);
+    System.waitSystick(startTime, period);
 
     if(!(mask >>= 1)) {
       if(p >= end) break;

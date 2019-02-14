@@ -55,6 +55,8 @@ public:
 
   virtual bool isOn() = 0;
 
+  void (*onNMEAReceived)(Gps &) = nullptr;
+
 protected:
   /**
     \return  Fix quality

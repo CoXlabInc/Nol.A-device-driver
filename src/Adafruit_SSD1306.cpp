@@ -149,7 +149,7 @@
 */
 Adafruit_SSD1306::Adafruit_SSD1306(uint8_t w, uint8_t h, TwoWire *twi,
   int8_t rst_pin, uint32_t clkDuring, uint32_t clkAfter) :
-  Adafruit_GFX(w, h), spi(NULL), wire(twi ? twi : &Wire), buffer(NULL),
+  Adafruit_GFX(w, h), spi(NULL), wire(twi), buffer(NULL),
   mosiPin(-1), clkPin(-1), dcPin(-1), csPin(-1), rstPin(rst_pin),
   wireClk(clkDuring), restoreClk(clkAfter) {
 }

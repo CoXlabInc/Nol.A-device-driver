@@ -1,13 +1,7 @@
-#ifndef LIB_ADAFRUIT_AMG88XX_H
-#define LIB_ADAFRUIT_AMG88XX_H
+#pragma once
 
-#if (ARDUINO >= 100)
- #include "Arduino.h"
-#else
- #include "WProgram.h"
-#endif
-
-#include <Wire.h>
+#include <nola-common.h>
+#include <TwoWire.hpp>
 
 /*=========================================================================
     I2C ADDRESS/BITS
@@ -81,10 +75,10 @@
 class Adafruit_AMG88xx {
 	public:
 		//constructors
-		Adafruit_AMG88xx(void) {};
+		Adafruit_AMG88xx(TwoWire &w, uint8_t addr = AMG88xx_ADDRESS) : Wire(w), _i2caddr(addr) {};
 		~Adafruit_AMG88xx(void) {};
 		
-		bool begin(uint8_t addr = AMG88xx_ADDRESS);
+		bool begin();
 		
 		void readPixels(float *buf, uint8_t size = AMG88xx_PIXEL_ARRAY_SIZE);
 		float readThermistor();
@@ -104,6 +98,7 @@ class Adafruit_AMG88xx {
 		void	  setInterruptLevels(float high, float low, float hysteresis);
 		
 	private:
+		TwoWire &Wire;
 		uint8_t _i2caddr;
 		
 		void      write8(byte reg, byte value);
@@ -112,7 +107,6 @@ class Adafruit_AMG88xx {
 		
 		void read(uint8_t reg, uint8_t *buf, uint8_t num);
 		void write(uint8_t reg, uint8_t *buf, uint8_t num);
-		void _i2c_init();
 		
 		float signedMag12ToFloat(uint16_t val);
 		float int12ToFloat(uint16_t val);
@@ -334,5 +328,3 @@ class Adafruit_AMG88xx {
 		
 		
 };
-
-#endif

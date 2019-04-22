@@ -37,61 +37,32 @@ class MT3339 : public Gps {
 public:
   MT3339(SerialPort &uart);
 
-  void begin();
+  virtual void begin();
 
-  void turnOn();
+  virtual void turnOn();
 
-  void turnOff();
+  virtual void turnOff();
 
-  bool isOn();
+  virtual bool isOn();
 
-  void useGSA();
-
-  char getGsaOpMode();
-
-  uint8_t getGsaNavMode();
-
-  float getGsaPDoP();
-
-  float getGsaHDoP();
-
-  float getGsaVDoP();
-
-  void useRMC();
-
-  float getRmcSpeedOverGround();
-
-  float getRmcCourseOverGround();
+  const char *getLatestRMC() { return _latestRMC; }
+  const char *getLatestGGA() { return _latestGGA; }
+  const char *getLatestGSA() { return _latestGSA; }
+  const char *getLatestGSV(uint8_t seq) { return (seq < 3) ? _latestGSV[seq] : nullptr; }
+  const char *getLatestVTG() { return _latestVTG; }
 
 private:
   SerialPort &Uart;
 
   char buf[255];
 
-  char gsaOpMode;
-  uint8_t gsaNavMode;
-  float gsaPDoP;
-  float gsaHDoP;
-  float gsaVDoP;
-  float rmcSpd;
-  float rmcCog;
+  const char *_latestRMC = nullptr;
+  const char *_latestGGA = nullptr;
+  const char *_latestGSA = nullptr;
+  const char *_latestGSV[3] = { nullptr, };
+  const char *_latestVTG = nullptr;
 
-  bool (*gsaParser)(
-    const char *msg,
-    char *opMode,
-    uint8_t *navMode,
-    float *pdop,
-    float *hdop,
-    float *vdop
-  );
-
-  bool (*rmcParser)(
-    const char *msg,
-    float *spd,
-    float *cog
-  );
-
-  static void NMEAReceived(void *);
+  void parseNMEA();
 };
 
 #endif //MT3339_HPP

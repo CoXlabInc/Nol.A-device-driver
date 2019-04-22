@@ -30,75 +30,133 @@
 #include "MT3339.hpp"
 #include <cox.h>
 
-MT3339::MT3339(SerialPort &uart) :
-Uart(uart),
-gsaOpMode('\0'),
-gsaNavMode(0),
-gsaPDoP(99.99),
-gsaHDoP(99.99),
-gsaVDoP(99.99),
-rmcSpd(0),
-rmcCog(0),
-gsaParser(NULL),
-rmcParser(NULL) {
+MT3339::MT3339(SerialPort &uart) : Uart(uart) {
 }
 
 void MT3339::begin() {
   Uart.begin(9600);
-  Uart.onReceive(NMEAReceived, this);
+  Uart.onReceive([](void *ctx) {
+                   ((MT3339 *) ctx)->parseNMEA();
+                 }, this);
   Uart.input(this->buf, 254, '\r');
   Uart.stopListening();
-  useGSA();
-  useRMC();
 }
 
-void MT3339::NMEAReceived(void *ctx) {
-  MT3339 *gps = (MT3339 *) ctx;
+void MT3339::parseNMEA() {
+  char *received = this->buf;
 
-  char *received = gps->buf;
-
-  while(*received != '$' && received < gps->buf + sizeof(gps->buf)) {
+  while(*received != '$' && received < this->buf + sizeof(this->buf)) {
     received++;
   }
 
   if (memcmp(received, "$GPGGA", 6) == 0) {
-    uint8_t fixQuality, hour = 0xFF, minute = 0xFF, sec = 0xFF, numSatellites = 0;
-    uint16_t subsec = 0xFFFF;
-    int32_t latitude, longitude, altitude;
-
-    fixQuality = ParseGGA( received,
-                  &hour, &minute, &sec, &subsec,
-                  &latitude, &longitude,
-                  &numSatellites, NULL, &altitude,
-                  NULL, NULL, NULL);
-    if (gps->callbackRead) {
-      gps->callbackRead(fixQuality, hour, minute, sec, subsec,
-                        latitude, longitude, altitude, numSatellites);
+    if (this->_latestGGA) {
+      delete [] this->_latestGGA;
+      this->_latestGGA = nullptr;
     }
-  } else if (gps->gsaParser != NULL && memcmp(received, "$GPGSA", 6) == 0) {
-    char opMode;
-    uint8_t navMode;
-    float pdop;
-    float hdop;
-    float vdop;
 
-    if (gps->gsaParser(received, &opMode, &navMode, &pdop, &hdop, &vdop)) {
-      gps->gsaOpMode = opMode;
-      gps->gsaNavMode = navMode;
-      gps->gsaPDoP = pdop;
-      gps->gsaHDoP = hdop;
-      gps->gsaVDoP = vdop;
+    uint8_t len = strlen(received);
+    char *gga = new char[len + 3];
+    if (gga) {
+      sprintf(gga, "%s\r\n", received);
+      this->_latestGGA = gga;
     }
-  } else if (gps->rmcParser != NULL && memcmp(received, "$GPRMC", 6) == 0) {
-    float spd, cog;
 
-    if (gps->rmcParser(received, &spd, &cog)) {
-      gps->rmcSpd = spd;
-      gps->rmcCog = cog;
+    /* Legacy method */
+    if (this->callbackRead) {
+      uint8_t fixQuality, hour = 0xFF, minute = 0xFF, sec = 0xFF, numSatellites = 0;
+      uint16_t subsec = 0xFFFF;
+      int32_t latitude, longitude, altitude;
+
+      fixQuality = ParseGGA( received,
+                             &hour, &minute, &sec, &subsec,
+                             &latitude, &longitude,
+                             &numSatellites, NULL, &altitude,
+                             NULL, NULL, NULL);
+      this->callbackRead(fixQuality, hour, minute, sec, subsec,
+                         latitude, longitude, altitude, numSatellites);
+    }
+  } else if (memcmp(received, "$GPGSA", 6) == 0) {
+    if (this->_latestGSA) {
+      delete [] this->_latestGSA;
+      this->_latestGSA = nullptr;
+    }
+
+    uint8_t len = strlen(received);
+    char *gsa = new char[len + 3];
+    if (gsa) {
+      sprintf(gsa, "%s\r\n", received);
+      this->_latestGSA = gsa;
+    }
+  } else if (memcmp(received, "$GPRMC", 6) == 0) {
+    if (this->_latestRMC) {
+      delete [] this->_latestRMC;
+      this->_latestRMC = nullptr;
+    }
+
+    uint8_t len = strlen(received);
+    char *rmc = new char[len + 3];
+    if (rmc) {
+      sprintf(rmc, "%s\r\n", received);
+      this->_latestRMC = rmc;
+    }
+  } else if (memcmp(received, "$GPGSV,", 7) == 0
+             && (received[7] >= '1' || received[7] <= '3')
+             && received[8] == ','
+             && (received[9] >= '1' || received[9] <= '3')) {
+    uint8_t seq = received[7] - (uint8_t) '1';
+    if (this->_latestGSV[seq]) {
+      delete [] this->_latestGSV[seq];
+      this->_latestGSV[seq] = nullptr;
+    }
+
+    uint8_t len = strlen(received);
+    char *gsv = new char[len + 3];
+    if (gsv) {
+      sprintf(gsv, "%s\r\n", received);
+      this->_latestGSV[seq] = gsv;
+    }
+  } else if (memcmp(received, "$GPVTG", 6) == 0) {
+    if (this->_latestVTG) {
+      delete [] this->_latestVTG;
+      this->_latestVTG = nullptr;
+    }
+
+    uint8_t len = strlen(received);
+    char *vtg = new char[len + 3];
+    if (vtg) {
+      sprintf(vtg, "%s\r\n", received);
+      this->_latestVTG = vtg;
+    }
+
+    if (!this->callbackRead && this->onNMEAReceived) {
+      onNMEAReceived(*this);
+    }
+
+    if (this->_latestRMC) {
+      delete [] this->_latestRMC;
+      this->_latestRMC = nullptr;
+    }
+
+    if (this->_latestGGA) {
+      delete [] this->_latestGGA;
+      this->_latestGGA = nullptr;
+    }
+
+    if (this->_latestGSA) {
+      delete [] this->_latestGSA;
+      this->_latestGSA = nullptr;
+    }
+
+    for (int i = 0; i < 3; i++) {
+      if (this->_latestGSV[i]) {
+        delete [] this->_latestGSV[i];
+        this->_latestGSV[i] = nullptr;
+      }
     }
   }
 
-  gps->Uart.input(gps->buf, 254, '\r');
+  this->Uart.input(this->buf, 254, '\r');
 }
 
 void MT3339::turnOn() {
@@ -111,40 +169,4 @@ void MT3339::turnOff() {
 
 bool MT3339::isOn() {
   return Uart.isListening();
-}
-
-void MT3339::useGSA() {
-  this->gsaParser = ParseGSA;
-}
-
-char MT3339::getGsaOpMode() {
-  return this->gsaOpMode;
-}
-
-uint8_t MT3339::getGsaNavMode() {
-  return this->gsaNavMode;
-}
-
-float MT3339::getGsaPDoP() {
-  return this->gsaPDoP;
-}
-
-float MT3339::getGsaHDoP() {
-  return this->gsaHDoP;
-}
-
-float MT3339::getGsaVDoP() {
-  return this->gsaVDoP;
-}
-
-void MT3339::useRMC() {
-  this->rmcParser = ParseRMC;
-}
-
-float MT3339::getRmcSpeedOverGround() {
-  return this->rmcSpd;
-}
-
-float MT3339::getRmcCourseOverGround() {
-  return this->rmcCog;
 }

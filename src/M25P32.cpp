@@ -54,6 +54,7 @@ M25P32::M25P32(uint8_t pinChipSelect, SPI &spi) {
 }
 
 void M25P32::beginTransaction() {
+  noInterrupts();
   this->spi->begin(SPI_CONF);
   digitalWrite(this->pinCS, LOW);
 }
@@ -61,6 +62,7 @@ void M25P32::beginTransaction() {
 void M25P32::endTransaction() {
   digitalWrite(this->pinCS, HIGH);
   this->spi->end();
+  interrupts();
 }
 
 void M25P32::begin() {
@@ -86,13 +88,6 @@ void M25P32::begin() {
   uint8_t st = this->spi->transfer(0);
 
   endTransaction();
-
-  printf("[M25P32] ID:");
-  for (uint8_t i = 0; i < sizeof(buf); i++) {
-    printf(" %02X", buf[i]);
-  }
-  printf("\n");
-  printf("[M25P32] st:0x%02X\n", st);
 
   enableWrite(false);
 
@@ -122,14 +117,10 @@ error_t M25P32::readInternal(void *dst, uint32_t addr, uint32_t len) {
   spi->transfer((addr >> 8) & 0xff);
   spi->transfer((addr >> 0) & 0xff);
 
-  //printf("addr: 0x%lX~0x%lX (up to 0x%lX)\n", addr, addr + len, ADDR_END + 0x10000);
   for (i = 0; i < len && addr + i <= ADDR_END + 0x10000; i++) {
     ((uint8_t *) dst)[i] = spi->transfer(0);
-    //printf(" %02X", ((uint8_t *) dst)[i]);
   }
   endTransaction();
-
-  //printf("\n");
 
   return ERROR_SUCCESS;
 }
@@ -182,11 +173,6 @@ error_t M25P32::write(const uint8_t *buf, uint64_t addr, uint32_t len) {
       debugPrintX("Load a page from the sector.", pageAddr);
       readInternal(tmpBuf, pageAddr, 256);
 
-      // for (uint32_t rp = 0; rp < 256; rp++) {
-      //   printf("%02X ", tmpBuf[rp]);
-      // }
-      // printf("\n");
-
       for (uint32_t wp = pageAddr; wp < pageAddr + 256; wp++) {
         if (wp >= (uint32_t) addr && wp < (uint32_t) addr + len) {
           debugPrintX("Modified", wp - pageAddr);
@@ -208,10 +194,8 @@ error_t M25P32::write(const uint8_t *buf, uint64_t addr, uint32_t len) {
       spi->transfer((backupPageAddr >> 0) & 0xFF);
 
       for (uint32_t rp = 0; rp < 256; rp++) {
-        // printf("%02X ", tmpBuf[rp]);
         spi->transfer(tmpBuf[rp]);
       }
-      // printf("\n");
       endTransaction();
     }
 
@@ -244,11 +228,9 @@ error_t M25P32::write(const uint8_t *buf, uint64_t addr, uint32_t len) {
       spi->transfer((pageAddr >> 0) & 0xFF);
 
       for (uint32_t rp = 0; rp < 256; rp++) {
-        // printf("%02X ", tmpBuf[rp]);
         spi->transfer(tmpBuf[rp]);
       }
       endTransaction();
-      // printf("\n");
     }
   }
 

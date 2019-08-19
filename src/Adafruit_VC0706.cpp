@@ -16,7 +16,7 @@
 
 
 #include <Adafruit_VC0706.hpp>
-#include <cox.h>
+#include <System.hpp>
 
 Adafruit_VC0706::Adafruit_VC0706(SerialPort &s) : serialNum(0), bufferLen(0), frameptr(0), serial(s) {
 }
@@ -393,9 +393,9 @@ boolean Adafruit_VC0706::verifyResponse(uint8_t command) {
 }
 
 void Adafruit_VC0706::printBuff() {
-  for (uint8_t i = 0; i< bufferLen; i++) {
-    Serial.print(" 0x");
-    Serial.print(camerabuff[i], HEX);
-  }
-  Serial.println();
+  // for (uint8_t i = 0; i< bufferLen; i++) {
+  //   Serial.print(" 0x");
+  //   Serial.print(camerabuff[i], HEX);
+  // }
+  // Serial.println();
 }

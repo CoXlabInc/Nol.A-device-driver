@@ -366,10 +366,12 @@ uint8_t Adafruit_VC0706::readResponse(uint8_t numbytes, uint8_t timeout) {
   bufferLen = 0;
   int avail;
 
+  this->serial.listen();
   while ((timeout != counter) && (bufferLen != numbytes)){
     avail = serial.available();
     if (avail <= 0) {
       delay(1);
+      System.feedWatchdog();
       counter++;
       continue;
     }
@@ -380,6 +382,7 @@ uint8_t Adafruit_VC0706::readResponse(uint8_t numbytes, uint8_t timeout) {
   //printBuff();
 //camerabuff[bufferLen] = 0;
 //Serial.println((char*)camerabuff);
+  this->serial.stopListening();
   return bufferLen;
 }
 

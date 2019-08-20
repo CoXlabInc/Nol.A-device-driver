@@ -203,7 +203,7 @@ void Adafruit_VC0706::OSD(uint8_t x, uint8_t y, char *str) {
   }
 
    runCommand(VC0706_OSD_ADD_CHAR, args, strlen(str)+3, 5);
-   printBuff();
+   // printBuff();
 }
 
 boolean Adafruit_VC0706::setCompression(uint8_t c) {
@@ -214,7 +214,7 @@ boolean Adafruit_VC0706::setCompression(uint8_t c) {
 uint8_t Adafruit_VC0706::getCompression(void) {
   uint8_t args[] = {0x4, 0x1, 0x1, 0x12, 0x04};
   runCommand(VC0706_READ_DATA, args, sizeof(args), 6);
-  printBuff();
+  // printBuff();
   return camerabuff[5];
 }
 
@@ -233,7 +233,7 @@ boolean Adafruit_VC0706::getPTZ(uint16_t &w, uint16_t &h, uint16_t &wz, uint16_t
 
   if (! runCommand(VC0706_GET_ZOOM, args, sizeof(args), 16))
     return false;
-  printBuff();
+  // printBuff();
 
   w = camerabuff[5];
   w <<= 8;
@@ -336,7 +336,9 @@ boolean Adafruit_VC0706::runCommand(uint8_t cmd, uint8_t *args, uint8_t argn,
 			   uint8_t resplen, boolean flushflag) {
   // flush out anything in the buffer?
   if (flushflag) {
-    readResponse(100, 10);
+    while (serial.available() > 0) {
+      serial.read();
+    }
   }
 
   sendCommand(cmd, args, argn);
@@ -354,10 +356,9 @@ void Adafruit_VC0706::sendCommand(uint8_t cmd, uint8_t args[] = 0, uint8_t argn 
 
   for (uint8_t i=0; i<argn; i++) {
     serial.write((byte)args[i]);
-    //Serial.print(" 0x");
-    //Serial.print(args[i], HEX);
+    // printf(" %02X", args[i]);
   }
-  //Serial.println();
+  // printf("\n");
 }
 
 uint8_t Adafruit_VC0706::readResponse(uint8_t numbytes, uint8_t timeout) {
@@ -393,9 +394,8 @@ boolean Adafruit_VC0706::verifyResponse(uint8_t command) {
 }
 
 void Adafruit_VC0706::printBuff() {
-  // for (uint8_t i = 0; i< bufferLen; i++) {
-  //   Serial.print(" 0x");
-  //   Serial.print(camerabuff[i], HEX);
-  // }
-  // Serial.println();
+  for (uint8_t i = 0; i< bufferLen; i++) {
+    printf(" 0x%02X", camerabuff[i]);
+  }
+  printf("\n");
 }

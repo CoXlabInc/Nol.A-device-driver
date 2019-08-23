@@ -1,11 +1,12 @@
 #include <Adafruit_AMG88xx.hpp>
+#include <algorithm>
 
-//#define I2C_DEBUG 
+//#define I2C_DEBUG
 
   #define AMG_I2C_CHUNKSIZE 32
 
 /**************************************************************************/
-/*! 
+/*!
     @brief  Setups the I2C interface and hardware
     @param  addr Optional I2C address the sensor can be found on. Default is 0x69
     @returns True if device is set up, false on any failure
@@ -16,14 +17,14 @@ bool Adafruit_AMG88xx::begin()
 	//enter normal mode
 	_pctl.PCTL = AMG88xx_NORMAL_MODE;
 	write8(AMG88xx_PCTL, _pctl.get());
-	
+
 	//software reset
 	_rst.RST = AMG88xx_INITIAL_RESET;
 	write8(AMG88xx_RST, _rst.get());
-	
+
 	//disable interrupts by default
 	disableInterrupt();
-	
+
 	//set to 10 FPS
 	_fpsc.FPS = AMG88xx_FPS_10;
 	write8(AMG88xx_FPSC, _fpsc.get());
@@ -34,7 +35,7 @@ bool Adafruit_AMG88xx::begin()
 }
 
 /**************************************************************************/
-/*! 
+/*!
     @brief  Set the moving average mode.
     @param  mode if True is passed, output will be twice the moving average
 */
@@ -46,7 +47,7 @@ void Adafruit_AMG88xx::setMovingAverageMode(bool mode)
 }
 
 /**************************************************************************/
-/*! 
+/*!
     @brief  Set the interrupt levels. The hysteresis value defaults to .95 * high
     @param  high the value above which an interrupt will be triggered
     @param  low the value below which an interrupt will be triggered
@@ -58,7 +59,7 @@ void Adafruit_AMG88xx::setInterruptLevels(float high, float low)
 }
 
 /**************************************************************************/
-/*! 
+/*!
     @brief  Set the interrupt levels
     @param  high the value above which an interrupt will be triggered
     @param  low the value below which an interrupt will be triggered
@@ -73,14 +74,14 @@ void Adafruit_AMG88xx::setInterruptLevels(float high, float low, float hysteresi
 	_inthh.INT_LVL_H = (highConv & 0xF) >> 4;
 	this->write8(AMG88xx_INTHL, _inthl.get());
 	this->write8(AMG88xx_INTHH, _inthh.get());
-	
+
 	int lowConv = low / AMG88xx_PIXEL_TEMP_CONVERSION;
 	lowConv = constrain(lowConv, -4095, 4095);
 	_intll.INT_LVL_L = lowConv & 0xFF;
 	_intlh.INT_LVL_L = (lowConv & 0xF) >> 4;
 	this->write8(AMG88xx_INTLL, _intll.get());
 	this->write8(AMG88xx_INTLH, _intlh.get());
-	
+
 	int hysConv = hysteresis / AMG88xx_PIXEL_TEMP_CONVERSION;
 	hysConv = constrain(hysConv, -4095, 4095);
 	_ihysl.INT_HYS = hysConv & 0xFF;
@@ -90,7 +91,7 @@ void Adafruit_AMG88xx::setInterruptLevels(float high, float low, float hysteresi
 }
 
 /**************************************************************************/
-/*! 
+/*!
     @brief  enable the interrupt pin on the device.
 */
 /**************************************************************************/
@@ -101,7 +102,7 @@ void Adafruit_AMG88xx::enableInterrupt()
 }
 
 /**************************************************************************/
-/*! 
+/*!
     @brief  disable the interrupt pin on the device
 */
 /**************************************************************************/
@@ -112,7 +113,7 @@ void Adafruit_AMG88xx::disableInterrupt()
 }
 
 /**************************************************************************/
-/*! 
+/*!
     @brief  Set the interrupt to either absolute value or difference mode
     @param  mode passing AMG88xx_DIFFERENCE sets the device to difference mode, AMG88xx_ABSOLUTE_VALUE sets to absolute value mode.
 */
@@ -124,7 +125,7 @@ void Adafruit_AMG88xx::setInterruptMode(uint8_t mode)
 }
 
 /**************************************************************************/
-/*! 
+/*!
     @brief  Read the state of the triggered interrupts on the device. The full interrupt register is 8 bytes in length.
     @param  buf the pointer to where the returned data will be stored
     @param  size Optional number of bytes to read. Default is 8 bytes.
@@ -133,13 +134,13 @@ void Adafruit_AMG88xx::setInterruptMode(uint8_t mode)
 /**************************************************************************/
 void Adafruit_AMG88xx::getInterrupt(uint8_t *buf, uint8_t size)
 {
-	uint8_t bytesToRead = min(size, (uint8_t)8);
-	
+	uint8_t bytesToRead = std::min(size, (uint8_t) 8);
+
 	this->read(AMG88xx_INT_OFFSET, buf, bytesToRead);
 }
 
 /**************************************************************************/
-/*! 
+/*!
     @brief  Clear any triggered interrupts
 */
 /**************************************************************************/
@@ -150,7 +151,7 @@ void Adafruit_AMG88xx::clearInterrupt()
 }
 
 /**************************************************************************/
-/*! 
+/*!
     @brief  read the onboard thermistor
     @returns a the floating point temperature in degrees Celsius
 */
@@ -165,7 +166,7 @@ float Adafruit_AMG88xx::readThermistor()
 }
 
 /**************************************************************************/
-/*! 
+/*!
     @brief  Read Infrared sensor values
     @param  buf the array to place the pixels in
     @param  size Optionsl number of bytes to read (up to 64). Default is 64 bytes.
@@ -176,21 +177,21 @@ void Adafruit_AMG88xx::readPixels(float *buf, uint8_t size)
 {
 	uint16_t recast;
 	float converted;
-	uint8_t bytesToRead = min((uint8_t)(size << 1), (uint8_t)(AMG88xx_PIXEL_ARRAY_SIZE << 1));
+	uint8_t bytesToRead = std::min((uint8_t)(size << 1), (uint8_t)(AMG88xx_PIXEL_ARRAY_SIZE << 1));
 	uint8_t rawArray[bytesToRead];
 	this->read(AMG88xx_PIXEL_OFFSET, rawArray, bytesToRead);
-	
+
 	for(int i=0; i<size; i++){
 		uint8_t pos = i << 1;
 		recast = ((uint16_t)rawArray[pos + 1] << 8) | ((uint16_t)rawArray[pos]);
-		
+
 		converted = int12ToFloat(recast) * AMG88xx_PIXEL_TEMP_CONVERSION;
 		buf[i] = converted;
 	}
 }
 
 /**************************************************************************/
-/*! 
+/*!
     @brief  write one byte of data to the specified register
     @param  reg the register to write to
     @param  value the value to write
@@ -202,7 +203,7 @@ void Adafruit_AMG88xx::write8(byte reg, byte value)
 }
 
 /**************************************************************************/
-/*! 
+/*!
     @brief  read one byte of data from the specified register
     @param  reg the register to read
     @returns one byte of register data
@@ -212,17 +213,17 @@ uint8_t Adafruit_AMG88xx::read8(byte reg)
 {
 	uint8_t ret;
 	this->read(reg, &ret, 1);
-	
+
 	return ret;
 }
 
 void Adafruit_AMG88xx::read(uint8_t reg, uint8_t *buf, uint8_t num)
 {
 	uint8_t pos = 0;
-	
+
 	//on arduino we need to read in AMG_I2C_CHUNKSIZE byte chunks
 	while(pos < num){
-		uint8_t read_now = min((uint8_t)AMG_I2C_CHUNKSIZE, (uint8_t)(num - pos));
+		uint8_t read_now = std::min((uint8_t)AMG_I2C_CHUNKSIZE, (uint8_t)(num - pos));
 		this->Wire.beginTransmission((uint8_t)_i2caddr);
 		this->Wire.write((uint8_t)reg + pos);
 		this->Wire.endTransmission();
@@ -264,7 +265,7 @@ void Adafruit_AMG88xx::write(uint8_t reg, uint8_t *buf, uint8_t num)
 }
 
 /**************************************************************************/
-/*! 
+/*!
     @brief  convert a 12-bit signed magnitude value to a floating point number
     @param  val the 12-bit signed magnitude value to be converted
     @returns the converted floating point value
@@ -274,12 +275,12 @@ float Adafruit_AMG88xx::signedMag12ToFloat(uint16_t val)
 {
 	//take first 11 bits as absolute val
 	uint16_t absVal = (val & 0x7FF);
-	
+
 	return (val & 0x800) ? 0 - (float)absVal : (float)absVal ;
 }
 
 /**************************************************************************/
-/*! 
+/*!
     @brief  convert a 12-bit integer two's complement value to a floating point number
     @param  val the 12-bit integer  two's complement value to be converted
     @returns the converted floating point value

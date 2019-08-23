@@ -29,6 +29,7 @@
 
 #include <MMA8452Q.hpp>
 #include <nola-common.h>
+#include <algorithm>
 
 void MMA8452Q::begin(TwoWire &w, uint8_t addr, int8_t pinInt1, int8_t pinInt2) {
   this->wire = &w;
@@ -189,13 +190,13 @@ void MMA8452Q::setTransientDetection(bool enableX,
         ((enableY) ? (1 << 2) : 0) |
         ((enableZ) ? (1 << 1) : 0));
 
-  thresholdMilliG = min(thresholdMilliG, 8000);
+  thresholdMilliG = std::min(thresholdMilliG, (uint16_t) 8000);
   write(REG_TRANSIENT_THS, round(thresholdMilliG / 63));
 
   uint8_t mode = read(REG_CTRL2) & (bit(1) | bit(0));
   ODR_t odr = getODR();
 
-  durationMicros = min(durationMicros, maxDuration[odr][mode]);
+  durationMicros = std::min(durationMicros, maxDuration[odr][mode]);
   write(REG_TRANSIENT_COUNT, round(durationMicros / step[odr][mode]));
 
   // Enable transient detection interrupt and route to INT1.

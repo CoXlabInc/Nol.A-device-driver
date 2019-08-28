@@ -309,7 +309,11 @@ uint8_t Adafruit_VC0706::available(void) {
 }
 
 
-uint8_t * Adafruit_VC0706::readPicture(uint8_t n) {
+uint8_t * Adafruit_VC0706::readPicture(uint8_t n, uint16_t offset) {
+  if (offset != 0xFFFF) {
+    frameptr = offset;
+  }
+
   uint8_t args[] = {0x0C, 0x0, 0x0A,
                     0, 0, (uint8_t) (frameptr >> 8), (uint8_t) (frameptr & 0xFF),
                     0, 0, 0, n,

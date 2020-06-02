@@ -1,31 +1,35 @@
 #include <stdlib.h>
 
-#include "Adafruit_GFX.hpp"
 #include "ST7920.hpp"
-
-#include <stdio.h>
-
-#define ST7920_HEIGHT 	64		//64 pixels tall display
-#define ST7920_WIDTH	128		//128 pixels wide display
 
 #define BLACK 1					//Defines color - Black color -> Bit in buffer is set to one
 #define WHITE 0					//Defines color - White color -> Bit in buffer is set to zero
 
-uint16_t buff[ST7920_HEIGHT][ST7920_WIDTH / 16];
-
 void ST7920::drawPixel(int16_t x, int16_t y, uint16_t color) {
-  if(x<0 || x>=ST7920_WIDTH || y<0 || y>=ST7920_HEIGHT) return;
+  if (!this->buff) return;
+  
+  if (x < 0 || (uint16_t) x >= this->WIDTH ||
+      y < 0 || (uint16_t) y >= this->HEIGHT) {
+    return;
+  }
+  
   if (color == BLACK) {
-    bitSet(buff[y][x / 16], 15 - (x % 16));
+    bitSet(this->buff[y * (this->WIDTH / 16) + (x / 16)], 15 - (x % 16));
   } else {
-    bitClear(buff[y][x / 16], 15 - (x % 16));
+    bitClear(this->buff[y * (this->WIDTH / 16) + (x / 16)], 15 - (x % 16));
   }
 }
 
-ST7920::ST7920(SPI &s, int8_t CS) : Adafruit_GFX(ST7920_WIDTH, ST7920_HEIGHT), spi(s), cs(CS) {
+ST7920::ST7920(uint16_t width, uint16_t height, SPI &s, int8_t CS)
+  : Adafruit_GFX(width, height), spi(s), cs(CS), WIDTH(width), HEIGHT(height) {
+  this->buff = new uint16_t[height * (width / 16)];
 }
 
-void ST7920::begin(void) {
+bool ST7920::begin(void) {
+  if (!this->buff) {
+    return false;
+  }
+  
   pinMode(cs, OUTPUT);
   digitalWrite(cs, LOW);
 
@@ -36,35 +40,37 @@ void ST7920::begin(void) {
 
   digitalWrite(cs, LOW);
   this->spi.end();
+  return true;
 }
 
 void ST7920::clearDisplay() {
-  long* p = (long*)&buff;
-  for (int i = 0; i < 256; i++) {
-    p[i] = 0;
+  if (!this->buff) {
+    return;
+  }
+
+  for (uint16_t y = 0; y < this->HEIGHT; y++) {
+    for (uint16_t x = 0; x < this->WIDTH / 16; x++) {
+      this->buff[y * (this->WIDTH / 16) + x] = 0;
+    }
   }
 }
 
 void ST7920::display() {
-  int x = 0, y = 0, n = 0;
-
+  if (!this->buff) {
+    return;
+  }
+  
   this->spi.begin(8000000ul, SPI::MSBFIRST, SPI::MODE3);
   digitalWrite(cs, HIGH);
 
   ST7920Command(0b00100100); //EXTENDED INSTRUCTION SET
   ST7920Command(0b00100110); //EXTENDED INSTRUCTION SET
 
-  for (y = 0; y < ST7920_HEIGHT / 2; y++) {
+  for (uint16_t y = 0; y < this->HEIGHT; y++) {
     ST7920Command(0x80 | y);
     ST7920Command(0x80 | 0);
-    for (x = 0; x < 8; x++) {
-      uint16_t d = buff[y][x];
-      ST7920Data(d >> 8);
-      ST7920Data(d & 0xFF);
-    }
-
-    for (x = 0; x < 8; x++) {
-      uint16_t d = buff[y + 32][x];
+    for (uint16_t x = 0; x < this->WIDTH / 16; x++) {
+      uint16_t d = this->buff[y * (this->WIDTH / 16) + x];
       ST7920Data(d >> 8);
       ST7920Data(d & 0xFF);
     }
@@ -74,9 +80,14 @@ void ST7920::display() {
 }
 
 void ST7920::invertDisplay() {
-  long* p = (long*)&buff;
-  for(int i = 0; i<256; i++) {
-    p[i] = ~p[i];
+  if (!this->buff) {
+    return;
+  }
+
+  for (uint16_t y = 0; y < this->HEIGHT; y++) {
+    for (uint16_t x = 0; x < this->WIDTH / 16; x++) {
+      this->buff[y * (this->WIDTH / 16) + x] = ~this->buff[y * (this->WIDTH / 16) + x];
+    }
   }
 }
 

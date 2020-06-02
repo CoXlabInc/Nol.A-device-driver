@@ -8,12 +8,12 @@
 
 class ST7920 : public Adafruit_GFX {
 public:
-  ST7920(SPI &, int8_t CS);
+  ST7920(uint16_t width, uint16_t height, SPI &, int8_t CS);
 
-  void begin(void);
+  bool begin(void);
   void clearDisplay(void);
   void invertDisplay(void);
-  void display();
+  virtual void display();
 
   void drawPixel(int16_t x, int16_t y, uint16_t color);
 
@@ -22,9 +22,12 @@ public:
   void cursor();
   void blink();
 
-private:
+protected:
   SPI &spi;
   int8_t cs;
+  uint16_t *buff = nullptr;
+  const uint16_t WIDTH;
+  const uint16_t HEIGHT;
   void ST7920Data(uint8_t data);
   void ST7920Command(uint8_t data);
 };

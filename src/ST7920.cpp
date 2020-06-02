@@ -3,47 +3,39 @@
 #include "Adafruit_GFX.hpp"
 #include "ST7920.hpp"
 
+#include <stdio.h>
+
 #define ST7920_HEIGHT 	64		//64 pixels tall display
 #define ST7920_WIDTH	128		//128 pixels wide display
 
 #define BLACK 1					//Defines color - Black color -> Bit in buffer is set to one
 #define WHITE 0					//Defines color - White color -> Bit in buffer is set to zero
 
-uint8_t buff[1024];		//This array serves as primitive "Video RAM" buffer
+uint16_t buff[ST7920_HEIGHT][ST7920_WIDTH / 16];
 
-//This display is split into two halfs. Pages are 16bit long and pages are arranged in that way that are lied horizontaly instead of verticaly, unlike SSD1306 OLED, Nokia 5110 LCD, etc.
-//After 8 horizonral page is written, it jumps to half of the screen (Y = 32) and continues until 16 lines of page have been written. After that, we have set cursor in new line.
 void ST7920::drawPixel(int16_t x, int16_t y, uint16_t color) {
   if(x<0 || x>=ST7920_WIDTH || y<0 || y>=ST7920_HEIGHT) return;
-  uint8_t y0 = 0, x0 = 0;								//Define and initilize varilables for skiping rows
-  uint16_t data, n;										//Define variable for sending data itno buffer (basicly, that is one line of page)
-  if (y > 31) {											//If Y coordinate is bigger than 31, that means we have to skip into that row, but we have to do that by adding 
-    y -= 32;
-    y0 = 16;
-  }
-  x0 = x % 16;
-  x /= 16;
-  data = 0x8000 >> x0;
-  n = (x * 2) + (y0) + (32 * y);
-  if (!color) {
-    buff[n] &= (~data >> 8);
-    buff[n + 1] &= (~data & 0xFF);
-  }else{
-    buff[n] |= (data >> 8);
-    buff[n + 1] |= (data & 0xFF);
+  if (color == BLACK) {
+    bitSet(buff[y][x / 16], 15 - (x % 16));
+  } else {
+    bitClear(buff[y][x / 16], 15 - (x % 16));
   }
 }
 
-ST7920::ST7920(int8_t CS) : Adafruit_GFX(ST7920_WIDTH, ST7920_HEIGHT) {
-  cs = CS;
+ST7920::ST7920(SPI &s, int8_t CS) : Adafruit_GFX(ST7920_WIDTH, ST7920_HEIGHT), spi(s), cs(CS) {
 }
 
 void ST7920::begin(void) {
-  SPI.begin();
   pinMode(cs, OUTPUT);
-  digitalWrite(cs, HIGH);
-  ST7920Command(B00001100);
   digitalWrite(cs, LOW);
+
+  this->spi.begin(8000000ul, SPI::MSBFIRST, SPI::MODE3);
+  digitalWrite(cs, HIGH);
+
+  ST7920Command(0b00001100);
+
+  digitalWrite(cs, LOW);
+  this->spi.end();
 }
 
 void ST7920::clearDisplay() {
@@ -55,19 +47,30 @@ void ST7920::clearDisplay() {
 
 void ST7920::display() {
   int x = 0, y = 0, n = 0;
+
+  this->spi.begin(8000000ul, SPI::MSBFIRST, SPI::MODE3);
   digitalWrite(cs, HIGH);
-  ST7920Command(B00100100); //EXTENDED INSTRUCTION SET
-  ST7920Command(B00100110); //EXTENDED INSTRUCTION SET
-  for (y = 0; y < 32; y++) {
+
+  ST7920Command(0b00100100); //EXTENDED INSTRUCTION SET
+  ST7920Command(0b00100110); //EXTENDED INSTRUCTION SET
+
+  for (y = 0; y < ST7920_HEIGHT / 2; y++) {
     ST7920Command(0x80 | y);
-    ST7920Command(0x80 | x);
-    for (x = 0; x < 16; x++) {
-      ST7920Data(buff[n]);
-      ST7920Data(buff[n + 1]);
-      n += 2;
+    ST7920Command(0x80 | 0);
+    for (x = 0; x < 8; x++) {
+      uint16_t d = buff[y][x];
+      ST7920Data(d >> 8);
+      ST7920Data(d & 0xFF);
+    }
+
+    for (x = 0; x < 8; x++) {
+      uint16_t d = buff[y + 32][x];
+      ST7920Data(d >> 8);
+      ST7920Data(d & 0xFF);
     }
   }
   digitalWrite(cs, LOW);
+  this->spi.end();
 }
 
 void ST7920::invertDisplay() {
@@ -78,19 +81,27 @@ void ST7920::invertDisplay() {
 }
 
 void ST7920::ST7920Data(uint8_t data) { //RS = 1 RW = 0
-  SPI.beginTransaction(SPISettings(8000000, MSBFIRST, SPI_MODE3));
-  SPI.transfer(B11111010);
-  SPI.transfer((data & B11110000));
-  SPI.transfer((data & B00001111) << 4);
-  SPI.endTransaction();
+  this->spi.transfer(0b11111010);
+  this->spi.transfer((data & 0b11110000));
+  this->spi.transfer((data & 0b00001111) << 4);
   delayMicroseconds(38);
 }
 
 void ST7920::ST7920Command(uint8_t data) { //RS = 0 RW = 0
-  SPI.beginTransaction(SPISettings(8000000, MSBFIRST, SPI_MODE3));
-  SPI.transfer(B11111000);
-  SPI.transfer((data & B11110000));
-  SPI.transfer((data & B00001111) << 4);
-  SPI.endTransaction();
+  this->spi.transfer(0b11111000);
+  this->spi.transfer((data & 0b11110000));
+  this->spi.transfer((data & 0b00001111) << 4);
   delayMicroseconds(38);
+}
+
+void ST7920::backlight() {
+}
+
+void ST7920::noBacklight() {
+}
+
+void ST7920::cursor() {
+}
+
+void ST7920::blink() {
 }

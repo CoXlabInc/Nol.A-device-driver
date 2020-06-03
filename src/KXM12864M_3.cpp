@@ -27,18 +27,18 @@ void KXM12864M_3::display() {
     +--------+            +--------+--------+
     Actual Display        GDRAM address
    */
-  for (uint16_t y = 0; y < this->HEIGHT / 2; y++) {
+  for (int16_t y = 0; y < this->HEIGHT / 2; y++) {
     ST7920Command(0x80 | y);
     ST7920Command(0x80 | 0);
 
-    for (uint16_t x = 0; x < this->WIDTH / 16; x++) {
+    for (int16_t x = 0; x < this->WIDTH / 16; x++) {
       uint16_t d = this->buff[y * (this->WIDTH / 16) + x];
       ST7920Data(d >> 8);
       ST7920Data(d & 0xFF);
     }
 
     /* For lower half block */
-    for (uint16_t x = 0; x < this->WIDTH / 16; x++) {
+    for (int16_t x = 0; x < this->WIDTH / 16; x++) {
       uint16_t d = this->buff[(y + this->HEIGHT / 2) * (this->WIDTH / 16) + x];
       ST7920Data(d >> 8);
       ST7920Data(d & 0xFF);

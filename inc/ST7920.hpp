@@ -13,6 +13,7 @@ public:
   bool begin(void);
   void clearDisplay(void);
   void invertDisplay(void);
+  bool isInverted();
   virtual void display();
 
   void drawPixel(int16_t x, int16_t y, uint16_t color);
@@ -26,8 +27,9 @@ protected:
   SPI &spi;
   int8_t cs;
   uint16_t *buff = nullptr;
-  const uint16_t WIDTH;
-  const uint16_t HEIGHT;
   void ST7920Data(uint8_t data);
   void ST7920Command(uint8_t data);
+
+private:
+  bool _isInverted = false;
 };

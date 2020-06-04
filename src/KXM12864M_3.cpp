@@ -1,5 +1,5 @@
 #include <stdlib.h>
-
+#include <algorithm>
 #include "KXM12864M_3.hpp"
 
 #define BLACK 1					//Defines color - Black color -> Bit in buffer is set to one
@@ -9,7 +9,7 @@ KXM12864M_3::KXM12864M_3(SPI &s, int8_t CS)
   : ST7920(128, 64, s, cs) {
 }
 
-void KXM12864M_3::display() {
+void KXM12864M_3::invalidate() {
   if (!this->buff) {
     return;
   }

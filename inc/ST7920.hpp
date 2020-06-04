@@ -14,7 +14,7 @@ public:
   void clearDisplay(void);
   void invertDisplay(void);
   bool isInverted();
-  virtual void display();
+  virtual void invalidate();
 
   void drawPixel(int16_t x, int16_t y, uint16_t color);
 

@@ -1,5 +1,5 @@
 #include <stdlib.h>
-
+#include <algorithm>
 #include "ST7920.hpp"
 
 #define BLACK 1					//Defines color - Black color -> Bit in buffer is set to one
@@ -56,7 +56,7 @@ void ST7920::clearDisplay() {
   }
 }
 
-void ST7920::display() {
+void ST7920::invalidate() {
   if (!this->buff) {
     return;
   }

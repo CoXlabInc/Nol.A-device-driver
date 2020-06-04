@@ -5,7 +5,7 @@
 #define BLACK 1					//Defines color - Black color -> Bit in buffer is set to one
 #define WHITE 0					//Defines color - White color -> Bit in buffer is set to zero
 
-KXM12864M_3::KXM12864M_3(SPI &s, int8_t CS)
+KXM12864M_3::KXM12864M_3(SPI &s, int8_t cs)
   : ST7920(128, 64, s, cs) {
 }
 

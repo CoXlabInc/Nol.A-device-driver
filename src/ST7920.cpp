@@ -13,6 +13,26 @@ void ST7920::drawPixel(int16_t x, int16_t y, uint16_t color) {
       (color != BLACK && color != WHITE)) {
     return;
   }
+
+  int16_t t;
+  switch (rotation) {
+  case 1:
+    t = x;
+    x = this->WIDTH - 1 - y;
+    y = t;
+    break;
+  case 2:
+    x = this->WIDTH - 1 - x;
+    y = this->HEIGHT - 1 - y;
+    break;
+  case 3:
+    t = x;
+    x = y;
+    y = this->HEIGHT - 1 - t;
+    break;
+  default:
+    break;
+  }
   
   if ((color == BLACK && !this->_isInverted) || (color == WHITE && this->_isInverted)) {
     bitSet(this->buff[y * (this->WIDTH / 16) + (x / 16)], 15 - (x % 16));

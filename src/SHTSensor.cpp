@@ -1,4 +1,5 @@
 /*
+ *  Copyright (c) 2022, CoXlab Inc. <jsjeong@coxlab.kr>
  *  Copyright (c) 2018, Sensirion AG <andreas.brauchli@sensirion.com>
  *  Copyright (c) 2015-2016, Johannes Winkelmann <jw@smts.ch>
  *  All rights reserved.
@@ -26,11 +27,9 @@
  *  THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <inttypes.h>
-#include <Arduino.h>
 
-#include "SHTSensor.h"
-
+#include <SHTSensor.hpp>
+#include <cox.h>
 
 //
 // class SHTSensorDriver
@@ -44,7 +43,6 @@ bool SHTSensorDriver::readSample()
 {
   return false;
 }
-
 
 //
 // class SHTI2cSensor

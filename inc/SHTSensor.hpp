@@ -1,4 +1,5 @@
 /*
+ *  Copyright (c) 2022, CoXlab Inc. <jsjeong@coxlab.kr>
  *  Copyright (c) 2018, Sensirion AG <andreas.brauchli@sensirion.com>
  *  Copyright (c) 2015-2016, Johannes Winkelmann <jw@smts.ch>
  *  All rights reserved.
@@ -26,11 +27,10 @@
  *  THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#ifndef SHTSENSOR_H
-#define SHTSENSOR_H
+#pragma once
 
 #include <inttypes.h>
-#include <Wire.h>
+#include <TwoWire.hpp>
 
 // Forward declaration
 class SHTSensorDriver;
@@ -118,7 +118,7 @@ public:
    *
    * Returns true if communication with a sensor on the bus was successful, false otherwise
    */
-  bool init(TwoWire & wire = Wire);
+  bool init(TwoWire & wire);
 
   /**
    * Read new values from the sensor
@@ -222,7 +222,7 @@ public:
   SHTI2cSensor(uint8_t i2cAddress, uint16_t i2cCommand, uint8_t duration,
                float a, float b, float c,
                float x, float y, float z, uint8_t cmd_Size,
-               TwoWire & wire = Wire)
+               TwoWire & wire)
       : mI2cAddress(i2cAddress), mI2cCommand(i2cCommand), mDuration(duration),
         mA(a), mB(b), mC(c), mX(x), mY(y), mZ(z), mCmd_Size(cmd_Size),
         mWire(wire)
@@ -290,5 +290,3 @@ public:
   uint8_t mTemperatureAdcPin;
   uint8_t mReadResolutionBits;
 };
-
-#endif /* SHTSENSOR_H */

@@ -7,31 +7,36 @@ MaxBotix_HRXL_MaxSonar_WR::MaxBotix_HRXL_MaxSonar_WR(SerialPort &s)
 }
 
 void MaxBotix_HRXL_MaxSonar_WR::begin(void (*func)(MaxBotix_HRXL_MaxSonar_WR &,
-                                                   int16_t mm), uint16_t timeoutMsec) {
+                                                   int16_t mm),
+                                      uint16_t timeoutMsec) {
   this->onGotValue = func;
+  this->timeoutMsec = timeoutMsec;
+  this->s.onReceive([](void *ctx) {
+                      ((MaxBotix_HRXL_MaxSonar_WR *) ctx)->onReceive();
+                    }, this);
+  this->timeout.onFired([](void *ctx) {
+                          ((MaxBotix_HRXL_MaxSonar_WR *) ctx)->onTimeout();
+                        }, this);
 }
 
 void MaxBotix_HRXL_MaxSonar_WR::onReceive() {
   while (s.available() > 0) {
     char c = (char) s.read();
     if (c == 'R') {
-      bufIndex = 0;
-    } else if (c == '\r') {
-      if (bufIndex == 4) {
-        s.stopListening();
-        buf[4] = '\0';
-        uint16_t val = strtoul(buf, nullptr, 10);
+      buf[0] = 'R';
+      bufIndex = 1;
+    } else if (c == '\r' && bufIndex == 1 + 4) {
+      buf[bufIndex] = '\0';
+      uint16_t val = strtoul(&buf[1], nullptr, 10);
 
-        if (this->onGotValue) {
-          onGotValue(*this, val);
-        }
-      } else {
-        bufIndex = 5;
+      if (this->onGotValue) {
+        this->onGotValue(*this, val);
       }
-    } else if (c >= '0' && c <= '9') {
+      bufIndex = 0;
+    } else if (c >= '0' && c <= '9' && bufIndex < sizeof(buf)) {
       buf[bufIndex++] = c;
     } else {
-      bufIndex = 5;
+      bufIndex = 0;
     }
   }
 }

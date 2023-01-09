@@ -13,19 +13,14 @@ public:
              uint16_t timeoutMsec);
 
   virtual void turnOn() {
-    s.begin(9600);
-    s.onReceive([](void *ctx) {
-                  ((MaxBotix_HRXL_MaxSonar_WR *) ctx)->onReceive();
-                }, this);
-    timeout.onFired([](void *ctx) {
-                      ((MaxBotix_HRXL_MaxSonar_WR *) ctx)->onTimeout();
-                    }, this);
-    timeout.startOneShot(timeoutMsec);
+    this->s.begin(9600);
+    this->s.listen();
+    this->timeout.startOneShot(this->timeoutMsec);
   };
 
   virtual void turnOff() {
-    timeout.stop();
-    s.stopListening();
+    this->timeout.stop();
+    this->s.stopListening();
   };
 
 protected:
@@ -36,8 +31,8 @@ private:
   void onTimeout();
 
   void (*onGotValue)(MaxBotix_HRXL_MaxSonar_WR &, int16_t mm) = nullptr;
-  uint8_t bufIndex = 5;
-  char buf[5];
+  uint8_t bufIndex = 0;
+  char buf[6];
   Timer timeout;
   uint16_t timeoutMsec;
 };

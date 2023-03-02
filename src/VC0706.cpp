@@ -171,11 +171,11 @@ void VC0706::eventDataReceived() {
                           callback(cam->callbackArgOnPictureTaken,
                                    cam->imageBuf,
                                    cam->imageSize);
-                          dynamicFree(cam->imageBuf);
+                          delete[] cam->imageBuf;
                           cam->imageBuf = nullptr;
                         }
                       }, this)) {
-          dynamicFree(this->imageBuf);
+          delete[] this->imageBuf;
           this->imageBuf = nullptr;
 
           void (*callback)(void *, const char *, uint32_t) = this->callbackOnPictureTaken;
@@ -274,7 +274,7 @@ void VC0706::getLen()
 
 void VC0706::getImage() {
   //Take a image data
-  this->imageBuf = (char *) dynamicMalloc(this->imageSize);
+  this->imageBuf = new char[this->imageSize];
 
   if( (this->imageBuf == NULL)){
     //Not enough memory

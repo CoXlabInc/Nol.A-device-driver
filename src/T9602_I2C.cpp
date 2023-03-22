@@ -60,3 +60,23 @@ float T9602_I2C::readHumidity() {
 
   return (float) ((((uint16_t) val[0] & 0x3f) << 8) + val[1]) / 163.84;
 }
+
+void T9602_I2C::readHumidityAndTemperature(float *h, float *t) {
+  this->wire.beginTransmission(this->address);
+  this->wire.write(0x00);
+  this->wire.endTransmission();
+
+  uint8_t val[4];
+  this->wire.requestFrom(this->address, 4);
+  for (uint8_t i = 0; i < sizeof(val); i++) {
+    val[i] = this->wire.read();
+  }
+
+  if (h) {
+    *h = (float) ((((uint16_t) val[0] & 0x3f) << 8) + val[1]) / 163.84;
+  }
+
+  if (t) {
+    *t = (float) (((uint16_t) val[0] << 6) + (val[1] >> 2)) / 16384.0 * 165.0 - 40.0;
+  }  
+}

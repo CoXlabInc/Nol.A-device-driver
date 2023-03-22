@@ -42,6 +42,8 @@ public:
 
   float readHumidity();
 
+  void readHumidityAndTemperature(float *h, float *t);
+
 private:
   TwoWire &wire;
   const uint8_t address;

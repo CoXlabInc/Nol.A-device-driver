@@ -77,6 +77,6 @@ void T9602_I2C::readHumidityAndTemperature(float *h, float *t) {
   }
 
   if (t) {
-    *t = (float) (((uint16_t) val[0] << 6) + (val[1] >> 2)) / 16384.0 * 165.0 - 40.0;
+    *t = (float) (((uint16_t) val[2] << 6) + (val[3] >> 2)) / 16384.0 * 165.0 - 40.0;
   }  
 }

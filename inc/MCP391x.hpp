@@ -16,8 +16,8 @@ public:
                  MCP3914, // 8 channels (SPI)
   } Chip_t;
   
-  MCP391x(Chip_t type, SPI &spi, int8_t cs, int8_t dr, int8_t reset = -1)
-    : spi(spi), PIN_RESET(reset), PIN_CS(cs), PIN_DR(dr),
+  MCP391x(Chip_t type, SPI &spi, int8_t cs, int8_t dr, bool drHiZ = true, int8_t reset = -1)
+    : spi(spi), PIN_RESET(reset), PIN_CS(cs), PIN_DR(dr), drHiZ(drHiZ),
       NumChannels((type == MCP3918) ? 1 :
                   (type == MCP3910) ? 2 :
                   (type == MCP3919) ? 3 :
@@ -26,11 +26,29 @@ public:
                   (type == MCP3914) ? 8 : 0) {
   }
 
-  void begin(bool useInternalClock = false);
+  typedef enum { PRE_DIV1 = 0ul,
+                 PRE_DIV2 = 1ul,
+                 PRE_DIV4 = 2ul,
+                 PRE_DIV8 = 3ul } Pre_t;
 
+  typedef enum { OSR_32 =   0ul,
+                 OSR_64 =   1ul,
+                 OSR_128 =  2ul,
+                 OSR_256 =  3ul,
+                 OSR_512 =  4ul,
+                 OSR_1024 = 5ul,
+                 OSR_2048 = 6ul,
+                 OSR_4096 = 7ul } Osr_t;
+
+  bool begin(bool useCrystal = false, Pre_t pre = PRE_DIV1, Osr_t osr = OSR_256);
+
+  void streamStart(unsigned reg);
+  void streamEnd();
+  uint32_t readChannel(unsigned channel, unsigned len);
 private:
   SPI &spi;
   const int8_t PIN_RESET, PIN_CS, PIN_DR;
+  const bool drHiZ;
   const uint8_t NumChannels;
   unsigned channelWidth;
   unsigned repeat;
@@ -67,7 +85,4 @@ private:
   uint8_t reg_width(Reg_t reg);
   void write_reg(Reg_t, uint32_t val);
   uint32_t read_reg(Reg_t);
-  uint32_t read_channel(unsigned channel, unsigned len);
-  void stream_start(unsigned reg);
-  void stream_end();
 };

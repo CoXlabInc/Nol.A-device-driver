@@ -5,20 +5,10 @@ enum {
 	MCP3914_MAX_SAMPLE_SIZE = 32,
 };
 
-enum { MCP3914_CONFIG0_PRE_MASK = (3ul << 16),
-       MCP3914_CONFIG0_PRE1 = (0ul << 16),
-       MCP3914_CONFIG0_PRE2 = (1ul << 16),
-       MCP3914_CONFIG0_PRE4 = (2ul << 16),
-       MCP3914_CONFIG0_PRE8 = (3ul << 16),
-       MCP3914_CONFIG0_OSC_32 = (0ul << 13),
-       MCP3914_CONFIG0_OSC_64 = (1ul << 13),
-       MCP3914_CONFIG0_OSC_128 = (2ul << 13),
-       MCP3914_CONFIG0_OSC_256 = (3ul << 13),
-       MCP3914_CONFIG0_OSC_512 = (4ul << 13),
-       MCP3914_CONFIG0_OSC_1024 = (5ul << 13),
-       MCP3914_CONFIG0_OSC_2048 = (6ul << 13),
-       MCP3914_CONFIG0_OSC_4096 = (7ul << 13),
-       MCP3914_CONFIG0_OSC_MASK = (7ul << 13),
+enum { MCP3914_CONFIG0_PRE_SHIFT = 16,
+       MCP3914_CONFIG0_PRE_MASK = (3ul << 16),
+       MCP3914_CONFIG0_OSR_SHIFT = 13,
+       MCP3914_CONFIG0_OSR_MASK = (7ul << 13),
 
        MCP3914_CONFIG1_VREF_MASK = (1ul << 7),
        MCP3914_CONFIG1_VREF_EXT = (1ul << 7),
@@ -56,7 +46,7 @@ enum MCP3914_STREAM
 	MCP3914_STREAM_ALL
 };
 
-void MCP391x::begin(bool useInternalClock) {
+bool MCP391x::begin(bool useCrystal, MCP391x::Pre_t pre, MCP391x::Osr_t osr) {
   pinMode(this->PIN_CS, OUTPUT);
   digitalWrite(this->PIN_CS, HIGH);
 
@@ -78,7 +68,7 @@ void MCP391x::begin(bool useInternalClock) {
   if (v == 0xa50000) {
     uint32_t config1 = this->read_reg(REG_CONFIG1);
     uint32_t config1Modified = config1;
-    if (useInternalClock) {
+    if (useCrystal) {
       config1Modified = (config1 & ~MCP3914_CONFIG1_CLK_MASK) | MCP3914_CONFIG1_CLK_INT;
       this->write_reg(REG_CONFIG1, config1Modified);
     }
@@ -87,16 +77,31 @@ void MCP391x::begin(bool useInternalClock) {
     update_statuscom(statuscom);
 
     uint32_t config0 = this->read_reg(REG_CONFIG0);
-    uint32_t config0Modified = (((config0 & ~MCP3914_CONFIG0_PRE_MASK) | MCP3914_CONFIG0_PRE1) |
-                                ((config0 & ~MCP3914_CONFIG0_OSC_MASK) | MCP3914_CONFIG0_OSC_4096));
-    this->write_reg(REG_CONFIG0, config0Modified);
+    uint32_t config0Modified = config0;
 
-    printf("config1:0x%lx->%lx,statuscom:0x%lx(channelWidth:%u,repeat:%u,dataSize:%u),config0:0x%lx->%lx",
+    if (((config0 & MCP3914_CONFIG0_PRE_MASK) >> MCP3914_CONFIG0_PRE_SHIFT) != pre) {
+      config0Modified &= ~MCP3914_CONFIG0_PRE_MASK;
+      config0Modified |= (pre << MCP3914_CONFIG0_PRE_SHIFT);
+    }
+
+    if (((config0 & MCP3914_CONFIG0_OSR_MASK) >> MCP3914_CONFIG0_OSR_SHIFT) != osr) {
+      config0Modified &= ~MCP3914_CONFIG0_OSR_MASK;
+      config0Modified |= (osr << MCP3914_CONFIG0_OSR_SHIFT);
+    }
+
+    if (config0 != config0Modified) {
+      this->write_reg(REG_CONFIG0, config0Modified);
+    }
+
+    printf(",config1:0x%lx->%lx,statuscom:0x%lx(channelWidth:%u,repeat:%u,dataSize:%u),config0:0x%lx->%lx\n",
            config1, config1Modified,
            statuscom, this->channelWidth, this->repeat, this->dataSize,
            config0, config0Modified);
+    return true;
+  } else {
+    printf("\n");
+    return false;
   }
-  printf("\n");
 }
 
 static uint8_t READ_CMD(uint8_t address, uint8_t reg)
@@ -188,7 +193,7 @@ uint32_t MCP391x::read_reg(Reg_t reg) {
 	return val;
 }
 
-uint32_t MCP391x::read_channel(unsigned channel, unsigned len) {
+uint32_t MCP391x::readChannel(unsigned channel, unsigned len) {
 	uint32_t val = 0;
 	//assert(len >= 2 && len <= 4);
   this->select();
@@ -206,13 +211,4 @@ uint32_t MCP391x::read_channel(unsigned channel, unsigned len) {
 	}
   this->deselect();
 	return val;
-}
-
-void MCP391x::stream_start(unsigned reg) {
-  this->select();
-	this->spi.transfer(READ_CMD(MCP3914_CMD_ADDRESS, reg));
-}
-
-void MCP391x::stream_end() {
-  this->deselect();
 }

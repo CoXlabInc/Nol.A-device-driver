@@ -67,21 +67,13 @@
  #define SSD1306_MODE_DATA    digitalWrite(dcPin, HIGH); ///< Data mode
 #endif
 
-#if (ARDUINO >= 157) && !defined(ARDUINO_STM32_FEATHER)
- #define SETWIRECLOCK wire->setClock(wireClk)    ///< Set before I2C transfer
- #define RESWIRECLOCK wire->setClock(restoreClk) ///< Restore after I2C xfer
-#else // setClock() is not present in older Arduino Wire lib (or WICED)
- #define SETWIRECLOCK ///< Dummy stand-in define
- #define RESWIRECLOCK ///< keeps compiler happy
-#endif
+#define SETWIRECLOCK wire->setClock(wireClk)    ///< Set before I2C transfer
+#define RESWIRECLOCK wire->setClock(restoreClk) ///< Restore after I2C xfer
 
-#if defined(SPI_HAS_TRANSACTION)
- #define SPI_TRANSACTION_START spi->beginTransaction(spiSettings) ///< Pre-SPI
- #define SPI_TRANSACTION_END   spi->endTransaction()              ///< Post-SPI
-#else // SPI transactions likewise not present in older Arduino SPI lib
+ // #define SPI_TRANSACTION_START spi->beginTransaction(spiSettings) ///< Pre-SPI
+ // #define SPI_TRANSACTION_END   spi->endTransaction()              ///< Post-SPI
  #define SPI_TRANSACTION_START ///< Dummy stand-in define
  #define SPI_TRANSACTION_END   ///< keeps compiler happy
-#endif
 
 // The definition of 'transaction' is broadened a bit in the context of
 // this library -- referring not just to SPI transactions (if supported

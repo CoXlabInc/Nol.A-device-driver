@@ -366,7 +366,9 @@ VL53L0X_Error VL53L0X_DataInit(VL53L0X_DEV Dev) {
   /* read WHO_AM_I */
   uint8_t b;
   Status = VL53L0X_RdByte(Dev, 0xC0, &b);
-  // Serial.print("WHOAMI: 0x"); Serial.println(b, HEX);
+  
+  // System.out->print("WHOAMI: 0x");
+  // System.out->println(b, HEX);
 
   /* read WHO_AM_I */
 

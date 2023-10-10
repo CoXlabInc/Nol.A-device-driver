@@ -77,11 +77,20 @@ boolean Adafruit_VL53L0X::begin(VL53L0X_Sense_config_t vl_config, boolean debug)
       VL53L0X_IMPLEMENTATION_VER_MINOR != VERSION_REQUIRED_MINOR ||
       VL53L0X_IMPLEMENTATION_VER_SUB != VERSION_REQUIRED_BUILD) {
     if (debug) {
-      Serial.println(F(
-          "Found " STR(VL53L0X_IMPLEMENTATION_VER_MAJOR) "." STR(VL53L0X_IMPLEMENTATION_VER_MINOR) "." STR(
-              VL53L0X_IMPLEMENTATION_VER_SUB) " rev " STR(VL53L0X_IMPLEMENTATION_VER_REVISION)));
-      Serial.println(F("Requires " STR(VERSION_REQUIRED_MAJOR) "." STR(
-          VERSION_REQUIRED_MINOR) "." STR(VERSION_REQUIRED_BUILD)));
+      System.err->print("Found ");
+      System.err->print(VL53L0X_IMPLEMENTATION_VER_MAJOR);
+      System.err->print('.');
+      System.err->print(VL53L0X_IMPLEMENTATION_VER_MINOR);
+      System.err->print('.');
+      System.err->print(VL53L0X_IMPLEMENTATION_VER_SUB);
+      System.err->print(" rev ");
+      System.err->println(VL53L0X_IMPLEMENTATION_VER_REVISION);
+      System.err->print("Requires ");
+      System.err->print(VERSION_REQUIRED_MAJOR);
+      System.err->print('.');
+      System.err->print(VERSION_REQUIRED_MINOR);
+      System.err->print('.');
+      System.err->println(VERSION_REQUIRED_BUILD);
     }
 
     Status = VL53L0X_ERROR_NOT_SUPPORTED;
@@ -90,7 +99,6 @@ boolean Adafruit_VL53L0X::begin(VL53L0X_Sense_config_t vl_config, boolean debug)
   }
 
   Status = VL53L0X_DataInit(&MyDevice); // Data initialization
-
   if (!setAddress(this->I2CAddr)) {
     return false;
   }
@@ -99,27 +107,27 @@ boolean Adafruit_VL53L0X::begin(VL53L0X_Sense_config_t vl_config, boolean debug)
 
   if (Status == VL53L0X_ERROR_NONE) {
     if (debug) {
-      Serial.println(F("VL53L0X Info:"));
-      Serial.print(F("Device Name: "));
-      Serial.print(DeviceInfo.Name);
-      Serial.print(F(", Type: "));
-      Serial.print(DeviceInfo.Type);
-      Serial.print(F(", ID: "));
-      Serial.println(DeviceInfo.ProductId);
+      System.out->println("VL53L0X Info:");
+      System.out->print("Device Name: ");
+      System.out->print(DeviceInfo.Name);
+      System.out->print(", Type: ");
+      System.out->print(DeviceInfo.Type);
+      System.out->print(", ID: ");
+      System.out->println(DeviceInfo.ProductId);
 
-      Serial.print(F("Rev Major: "));
-      Serial.print(DeviceInfo.ProductRevisionMajor);
-      Serial.print(F(", Minor: "));
-      Serial.println(DeviceInfo.ProductRevisionMinor);
+      System.out->print("Rev Major: ");
+      System.out->print(DeviceInfo.ProductRevisionMajor);
+      System.out->print(", Minor: ");
+      System.out->println(DeviceInfo.ProductRevisionMinor);
     }
 
     if ((DeviceInfo.ProductRevisionMajor != 1) ||
         (DeviceInfo.ProductRevisionMinor != 1)) {
       if (debug) {
-        Serial.print(F("Error expected cut 1.1 but found "));
-        Serial.print(DeviceInfo.ProductRevisionMajor);
-        Serial.print(',');
-        Serial.println(DeviceInfo.ProductRevisionMinor);
+        System.err->print("Error expected cut 1.1 but found ");
+        System.err->print(DeviceInfo.ProductRevisionMajor);
+        System.err->print(',');
+        System.err->println(DeviceInfo.ProductRevisionMinor);
       }
 
       Status = VL53L0X_ERROR_NOT_SUPPORTED;
@@ -128,7 +136,7 @@ boolean Adafruit_VL53L0X::begin(VL53L0X_Sense_config_t vl_config, boolean debug)
 
   if (Status == VL53L0X_ERROR_NONE) {
     if (debug) {
-      Serial.println(F("VL53L0X: StaticInit"));
+      System.out->println("VL53L0X: StaticInit");
     }
 
     Status = VL53L0X_StaticInit(&MyDevice); // Device Initialization
@@ -136,23 +144,23 @@ boolean Adafruit_VL53L0X::begin(VL53L0X_Sense_config_t vl_config, boolean debug)
 
   if (Status == VL53L0X_ERROR_NONE) {
     if (debug) {
-      Serial.println(F("VL53L0X: PerformRefSpadManagement"));
+      System.out->println("VL53L0X: PerformRefSpadManagement");
     }
 
     Status = VL53L0X_PerformRefSpadManagement(
         &MyDevice, &refSpadCount, &isApertureSpads); // Device Initialization
 
     if (debug) {
-      Serial.print(F("refSpadCount = "));
-      Serial.print(refSpadCount);
-      Serial.print(F(", isApertureSpads = "));
-      Serial.println(isApertureSpads);
+      System.out->print("refSpadCount = ");
+      System.out->print(refSpadCount);
+      System.out->print(", isApertureSpads = ");
+      System.out->println(isApertureSpads);
     }
   }
 
   if (Status == VL53L0X_ERROR_NONE) {
     if (debug) {
-      Serial.println(F("VL53L0X: PerformRefCalibration"));
+      System.out->println("VL53L0X: PerformRefCalibration");
     }
 
     Status = VL53L0X_PerformRefCalibration(&MyDevice, &VhvSettings,
@@ -162,7 +170,7 @@ boolean Adafruit_VL53L0X::begin(VL53L0X_Sense_config_t vl_config, boolean debug)
   if (Status == VL53L0X_ERROR_NONE) {
     // no need to do this when we use VL53L0X_PerformSingleRangingMeasurement
     if (debug) {
-      Serial.println(F("VL53L0X: SetDeviceMode"));
+      System.out->println("VL53L0X: SetDeviceMode");
     }
 
     Status = VL53L0X_SetDeviceMode(
@@ -179,8 +187,8 @@ boolean Adafruit_VL53L0X::begin(VL53L0X_Sense_config_t vl_config, boolean debug)
     return true;
   } else {
     if (debug) {
-      Serial.print(F("VL53L0X Error: "));
-      Serial.println(Status);
+      System.err->print("VL53L0X Error: ");
+      System.err->println(Status);
     }
 
     return false;

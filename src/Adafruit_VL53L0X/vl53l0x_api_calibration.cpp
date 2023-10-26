@@ -112,9 +112,9 @@ VL53L0X_Error VL53L0X_perform_xtalk_calibration(
     /* FixPoint1616_t / uint16_t = FixPoint1616_t */
     xTalkStoredMeanSignalRate = sum_signalRate / total_count;
     xTalkStoredMeanRange =
-        (FixPoint1616_t)((uint32_t)(sum_ranging << 16) / total_count);
+      (FixPoint1616_t)(((uint32_t) sum_ranging << 16) / total_count);
     xTalkStoredMeanRtnSpads =
-        (FixPoint1616_t)((uint32_t)(sum_spads << 16) / total_count);
+      (FixPoint1616_t)(((uint32_t) sum_spads << 16) / total_count);
 
     /* Round Mean Spads to Whole Number.
      * Typically the calculated mean SPAD count is a whole number
@@ -156,7 +156,7 @@ VL53L0X_Error VL53L0X_perform_xtalk_calibration(
        * (2^16 * Fixed1616)
        */
       signalXTalkTotalPerSpad *=
-          ((1 << 16) - (xTalkStoredMeanRange / xTalkCalDistanceAsInt));
+          ((1ul << 16) - (xTalkStoredMeanRange / xTalkCalDistanceAsInt));
 
       /* Round from 2^16 * Fixed1616, to Fixed1616. */
       XTalkCompensationRateMegaCps = (signalXTalkTotalPerSpad + 0x8000) >> 16;
@@ -237,7 +237,7 @@ VL53L0X_perform_offset_calibration(VL53L0X_DEV Dev,
   if (Status == VL53L0X_ERROR_NONE) {
     /* FixPoint1616_t / uint16_t = FixPoint1616_t */
     StoredMeanRange =
-        (FixPoint1616_t)((uint32_t)(sum_ranging << 16) / total_count);
+      (FixPoint1616_t)(((uint32_t) sum_ranging << 16) / total_count);
 
     StoredMeanRangeAsInt = (StoredMeanRange + 0x8000) >> 16;
 
@@ -314,7 +314,7 @@ VL53L0X_Error VL53L0X_get_offset_calibration_data_micro_meter(
     RangeOffsetRegister = (RangeOffsetRegister & 0x0fff);
 
     /* Apply 12 bit 2's compliment conversion */
-    if (RangeOffsetRegister > cMaxOffset)
+    if ((int16_t) RangeOffsetRegister > cMaxOffset)
       *pOffsetCalibrationDataMicroMeter =
           (int16_t)(RangeOffsetRegister - cOffsetRange) * 250;
     else
@@ -768,7 +768,7 @@ VL53L0X_Error VL53L0X_perform_ref_spad_management(VL53L0X_DEV Dev,
     refSpadCount_int = minimumSpadCount;
 
     memcpy(lastSpadArray, Dev->Data.SpadData.RefSpadEnables, spadArraySize);
-    lastSignalRateDiff = abs(peakSignalRateRef - targetRefRate);
+    lastSignalRateDiff = abs((int32_t) peakSignalRateRef - (int32_t) targetRefRate);
     complete = 0;
 
     while (!complete) {
@@ -809,7 +809,7 @@ VL53L0X_Error VL53L0X_perform_ref_spad_management(VL53L0X_DEV Dev,
       if (Status != VL53L0X_ERROR_NONE)
         break;
 
-      signalRateDiff = abs(peakSignalRateRef - targetRefRate);
+      signalRateDiff = abs((int32_t) peakSignalRateRef - (int32_t) targetRefRate);
 
       if (peakSignalRateRef > targetRefRate) {
         /* Select the spad map that provides the

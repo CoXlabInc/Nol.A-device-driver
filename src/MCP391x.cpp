@@ -81,7 +81,7 @@ bool MCP391x::begin(bool useCrystal, MCP391x::Pre_t pre, MCP391x::Osr_t osr) {
 
     if (((config0 & MCP3914_CONFIG0_PRE_MASK) >> MCP3914_CONFIG0_PRE_SHIFT) != pre) {
       config0Modified &= ~MCP3914_CONFIG0_PRE_MASK;
-      config0Modified |= (pre << MCP3914_CONFIG0_PRE_SHIFT);
+      config0Modified |= ((uint32_t) pre << MCP3914_CONFIG0_PRE_SHIFT);
     }
 
     if (((config0 & MCP3914_CONFIG0_OSR_MASK) >> MCP3914_CONFIG0_OSR_SHIFT) != osr) {
@@ -180,12 +180,12 @@ uint32_t MCP391x::read_reg(Reg_t reg) {
 	this->spi.transfer(READ_CMD(MCP3914_CMD_ADDRESS, reg));
 	switch (len) {
 	case 4:
-		val |= this->spi.transfer(0xff) << 24;
+		val |= (uint32_t) this->spi.transfer(0xff) << 24;
 	case 3:
-		val |= this->spi.transfer(0xff) << 16;
+		val |= (uint32_t) this->spi.transfer(0xff) << 16;
 	case 2:
-		val |= this->spi.transfer(0xff) << 8;
-		val |= this->spi.transfer(0xff);
+		val |= (uint32_t) this->spi.transfer(0xff) << 8;
+		val |= (uint32_t) this->spi.transfer(0xff);
   default:
     break;
 	}
@@ -200,12 +200,12 @@ uint32_t MCP391x::readChannel(unsigned channel, unsigned len) {
 	this->spi.transfer(READ_CMD(MCP3914_CMD_ADDRESS, REG_CHANNEL_BASE + channel));
 	switch (len) {
 	case 4:
-		val |= this->spi.transfer(0xff) << 24;
+		val |= (uint32_t) this->spi.transfer(0xff) << 24;
 	case 3:
-		val |= this->spi.transfer(0xff) << 16;
+		val |= (uint32_t) this->spi.transfer(0xff) << 16;
 	case 2:
-		val |= this->spi.transfer(0xff) << 8;
-		val |= this->spi.transfer(0xff);
+		val |= (uint32_t) this->spi.transfer(0xff) << 8;
+		val |= (uint32_t) this->spi.transfer(0xff);
   default:
     break;
 	}

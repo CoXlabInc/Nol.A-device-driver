@@ -135,7 +135,7 @@ class Adafruit_SSD1306 : public Adafruit_GFX {
   boolean      begin(uint8_t switchvcc=SSD1306_SWITCHCAPVCC,
                  uint8_t i2caddr=0, boolean reset=true,
                  boolean periphBegin=true);
-  void         display(void);
+  virtual void display(void);
   void         clearDisplay(void);
   void         invertDisplay(boolean i);
   void         dim(boolean dim);

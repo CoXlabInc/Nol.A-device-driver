@@ -41,6 +41,8 @@ class Adafruit_GFX : public Print {
     drawLine(int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint16_t color),
     drawRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color);
 
+  virtual size_t write(uint8_t);
+  
   // These exist only with Adafruit_GFX (no subclass overrides)
   void
     drawCircle(int16_t x0, int16_t y0, int16_t r, uint16_t color),
@@ -97,7 +99,6 @@ class Adafruit_GFX : public Print {
 
   int16_t height(void) const;
   int16_t width(void) const;
-  size_t write(uint8_t);
   uint8_t getRotation(void) const;
 
   // get current cursor position (get rotation safe maximum values, using: width() for x, height() for y)

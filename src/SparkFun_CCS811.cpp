@@ -1,4 +1,4 @@
-#include "SparkFunCCS811.hpp"
+#include "SparkFun_CCS811.hpp"
 #include "cox.h"
 
 CCS811Core::CCS811Core(TwoWire &W, uint8_t addr) : Wire(W), I2CAddress(addr) {

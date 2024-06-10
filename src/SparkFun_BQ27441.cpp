@@ -1,5 +1,5 @@
 /******************************************************************************
-SparkFunBQ27441.cpp
+SparkFun_BQ27441.cpp
 BQ27441 Nol.A-SDK Library Main Source File
 Jongsoo Jeong @ CoXlab Inc.
 Aug 11, 2017
@@ -24,7 +24,7 @@ SparkFun Battery Babysitter v1.0
 Arduino Uno (any 'duino should do)
 ******************************************************************************/
 
-#include "SparkFunBQ27441.hpp"
+#include "SparkFun_BQ27441.hpp"
 
 /*****************************************************************************
  ************************** Initialization Functions *************************

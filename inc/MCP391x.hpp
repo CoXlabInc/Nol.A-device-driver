@@ -1,6 +1,12 @@
 /**
  * @file MCP391x.hpp
+ * @ingroup device_drivers
  * @brief Public driver declarations and configuration constants.
+ */
+
+/**
+ * @addtogroup device_drivers Device Drivers
+ * @{
  */
 // -*- mode:c++; indent-tabs-mode:nil; -*-
 
@@ -131,3 +137,5 @@ private:
   void write_reg(Reg_t, uint32_t val);
   uint32_t read_reg(Reg_t);
 };
+
+/** @} */

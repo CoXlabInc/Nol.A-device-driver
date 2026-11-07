@@ -1,6 +1,12 @@
 /**
  * @file SparkFun_BQ27441.hpp
+ * @ingroup device_drivers
  * @brief Public driver declarations and configuration constants.
+ */
+
+/**
+ * @addtogroup device_drivers Device Drivers
+ * @{
  */
 /******************************************************************************
 SparkFunBQ27441.hpp
@@ -681,3 +687,5 @@ private:
 };
 
 #endif //SparkFunBQ27441_hpp
+
+/** @} */

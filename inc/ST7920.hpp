@@ -1,6 +1,12 @@
 /**
  * @file ST7920.hpp
+ * @ingroup device_drivers
  * @brief Public driver declarations and configuration constants.
+ */
+
+/**
+ * @addtogroup device_drivers Device Drivers
+ * @{
  */
 /*
   Imported from https://github.com/BornaBiro/ST7920_GFX_Library
@@ -80,3 +86,5 @@ protected:
 private:
   bool _isInverted = false;
 };
+
+/** @} */

@@ -1,6 +1,12 @@
 /**
  * @file Adafruit_AMG88xx.hpp
+ * @ingroup device_drivers
  * @brief Public driver declarations and configuration constants.
+ */
+
+/**
+ * @addtogroup device_drivers Device Drivers
+ * @{
  */
 /*
 # Adafruit AMG88xx Library
@@ -410,3 +416,5 @@ class Adafruit_AMG88xx {
 		
 		
 };
+
+/** @} */

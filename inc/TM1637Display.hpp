@@ -1,6 +1,12 @@
 /**
  * @file TM1637Display.hpp
+ * @ingroup device_drivers
  * @brief Public driver declarations and configuration constants.
+ */
+
+/**
+ * @addtogroup device_drivers Device Drivers
+ * @{
  */
 #ifndef __TM1637DISPLAY__
 #define __TM1637DISPLAY__
@@ -71,3 +77,5 @@ private:
 };
 
 #endif
+
+/** @} */

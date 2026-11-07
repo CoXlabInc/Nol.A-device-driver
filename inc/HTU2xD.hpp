@@ -1,6 +1,12 @@
 /**
  * @file HTU2xD.hpp
+ * @ingroup device_drivers
  * @brief Public driver declarations and configuration constants.
+ */
+
+/**
+ * @addtogroup device_drivers Device Drivers
+ * @{
  */
 // -*- mode:c++; indent-tabs-mode:nil; -*-
 /*
@@ -71,3 +77,5 @@ public:
 private:
   TwoWire &wire;
 };
+
+/** @} */

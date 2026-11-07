@@ -1,6 +1,12 @@
 /**
  * @file gfxfont.hpp
+ * @ingroup device_drivers
  * @brief Glyph and font storage formats used by Adafruit_GFX.
+ */
+
+/**
+ * @addtogroup device_drivers Device Drivers
+ * @{
  */
 // Font structures for newer Adafruit_GFX (1.1 and later).
 // Example fonts are included in 'Fonts' directory.
@@ -32,3 +38,5 @@ typedef struct { // Data stored for FONT AS A WHOLE:
 } GFXfont;
 
 #endif // _GFXFONT_H_
+
+/** @} */

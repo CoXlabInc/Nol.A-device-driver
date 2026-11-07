@@ -1,6 +1,12 @@
 /**
  * @file Dogm128_6.hpp
+ * @ingroup device_drivers
  * @brief Public driver declarations and configuration constants.
+ */
+
+/**
+ * @addtogroup device_drivers Device Drivers
+ * @{
  */
 #include <cox.h>
 #include "Adafruit_GFX.hpp"
@@ -98,3 +104,5 @@ class Dogm128_6 : public Adafruit_GFX{
     uint8_t lcdMode;
     uint8_t rotation;
 };
+
+/** @} */

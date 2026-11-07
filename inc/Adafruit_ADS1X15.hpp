@@ -1,6 +1,12 @@
 /**************************************************************************/
+
+/**
+ * @addtogroup device_drivers Device Drivers
+ * @{
+ */
 /*!
     @file     Adafruit_ADS1X15.hpp
+ * @ingroup device_drivers
 
     This is a library for the Adafruit ADS1X15 ADC breakout boards.
 
@@ -260,3 +266,5 @@ public:
 };
 
 #endif
+
+/** @} */

@@ -1,6 +1,12 @@
 /**
  * @file T9602_I2C.hpp
+ * @ingroup device_drivers
  * @brief Public driver declarations and configuration constants.
+ */
+
+/**
+ * @addtogroup device_drivers Device Drivers
+ * @{
  */
 /*
  * The MIT License (MIT)
@@ -73,3 +79,5 @@ private:
   TwoWire &wire;
   const uint8_t address;
 };
+
+/** @} */

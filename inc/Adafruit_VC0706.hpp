@@ -1,6 +1,12 @@
 /**
  * @file Adafruit_VC0706.hpp
+ * @ingroup device_drivers
  * @brief Public driver declarations and configuration constants.
+ */
+
+/**
+ * @addtogroup device_drivers Device Drivers
+ * @{
  */
 /***************************************************
   This is a library for the Adafruit TTL JPEG Camera (VC0706 chipset)
@@ -252,3 +258,5 @@ class Adafruit_VC0706 {
   boolean verifyResponse(uint8_t command);
   void printBuff(void);
 };
+
+/** @} */

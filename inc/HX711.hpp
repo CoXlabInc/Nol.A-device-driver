@@ -1,6 +1,12 @@
 /**
  * @file HX711.hpp
+ * @ingroup device_drivers
  * @brief Public driver declarations and configuration constants.
+ */
+
+/**
+ * @addtogroup device_drivers Device Drivers
+ * @{
  */
 /*
  * The MIT License (MIT)
@@ -111,3 +117,5 @@ private:
 };
 
 #endif /* HX711_HPP */
+
+/** @} */

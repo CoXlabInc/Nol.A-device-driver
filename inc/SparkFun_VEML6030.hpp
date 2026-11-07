@@ -1,6 +1,12 @@
 /**
  * @file SparkFun_VEML6030.hpp
+ * @ingroup device_drivers
  * @brief Public driver declarations and configuration constants.
+ */
+
+/**
+ * @addtogroup device_drivers Device Drivers
+ * @{
  */
 #pragma once
 
@@ -353,3 +359,5 @@ private:
   // address as its' parameter.
   uint16_t _readRegister(uint8_t _reg);
 };
+
+/** @} */

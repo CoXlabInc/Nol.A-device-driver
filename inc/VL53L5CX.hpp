@@ -1,6 +1,12 @@
 /**
  * @file VL53L5CX.hpp
+ * @ingroup device_drivers
  * @brief Public driver declarations and configuration constants.
+ */
+
+/**
+ * @addtogroup device_drivers Device Drivers
+ * @{
  */
 #pragma once
 #include <TwoWire.hpp>
@@ -121,3 +127,5 @@ private:
   bool ranging = false;
   uint8_t configurable() const;
 };
+
+/** @} */

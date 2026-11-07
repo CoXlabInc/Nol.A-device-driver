@@ -1,5 +1,6 @@
 /*!
  * @file Adafruit_VL53L0X.hpp
+ * @ingroup device_drivers
 
   This is a library for the Adafruit VL53L0X Sensor Breakout
 
@@ -18,6 +19,11 @@
   BSD license, all text above must be included in any
   redistribution
  ****************************************************/
+
+/**
+ * @addtogroup device_drivers Device Drivers
+ * @{
+ */
 
 #pragma once
 
@@ -261,3 +267,27 @@ private:
 
   uint8_t _rangeStatus;
 };
+
+// Keep the vendor API topic hierarchy beneath the device driver topic.
+/**
+ * @addtogroup VL53L0X_platform_group
+ * @ingroup device_drivers
+ */
+/**
+ * @addtogroup VL53L0X_globaldefine_group
+ * @ingroup device_drivers
+ */
+/**
+ * @addtogroup VL53L0X_cut11_group
+ * @ingroup device_drivers
+ */
+/**
+ * @addtogroup VL53L0X_DevSpecDefines_group
+ * @ingroup device_drivers
+ */
+/**
+ * @addtogroup calc_sigma_estimate
+ * @ingroup device_drivers
+ */
+
+/** @} */

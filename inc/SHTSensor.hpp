@@ -1,6 +1,12 @@
 /**
  * @file SHTSensor.hpp
+ * @ingroup device_drivers
  * @brief Public driver declarations and configuration constants.
+ */
+
+/**
+ * @addtogroup device_drivers Device Drivers
+ * @{
  */
 /*
  *  Copyright (c) 2022, CoXlab Inc. <jsjeong@coxlab.kr>
@@ -364,3 +370,5 @@ public:
    */
   uint8_t mReadResolutionBits;
 };
+
+/** @} */

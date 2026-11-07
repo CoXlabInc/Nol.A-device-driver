@@ -1,6 +1,12 @@
 /**
  * @file VC0706.hpp
+ * @ingroup device_drivers
  * @brief Public driver declarations and configuration constants.
+ */
+
+/**
+ * @addtogroup device_drivers Device Drivers
+ * @{
  */
 #ifndef VC0706_HPP
 /** @brief VC0706 hpp protocol constant. */
@@ -151,3 +157,5 @@ private:
 };
 
 #endif //VC0706_HPP
+
+/** @} */

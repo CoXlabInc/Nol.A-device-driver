@@ -1,6 +1,12 @@
 /**
  * @file LiquidCrystal_I2C.hpp
+ * @ingroup device_drivers
  * @brief Public driver declarations and configuration constants.
+ */
+
+/**
+ * @addtogroup device_drivers Device Drivers
+ * @{
  */
 /*
   Original source: https://github.com/johnrickman/LiquidCrystal_I2C
@@ -302,3 +308,5 @@ private:
   uint8_t _rows;
   uint8_t _backlightval;
 };
+
+/** @} */

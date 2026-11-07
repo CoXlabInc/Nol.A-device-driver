@@ -1,6 +1,12 @@
 /**
  * @file Adafruit_VS1053.hpp
+ * @ingroup device_drivers
  * @brief Public driver declarations and configuration constants.
+ */
+
+/**
+ * @addtogroup device_drivers Device Drivers
+ * @{
  */
 /*************************************************** 
   This is a library for the Adafruit VS1053 Codec Breakout
@@ -273,3 +279,5 @@ class Adafruit_VS1053_FilePlayer : public Adafruit_VS1053 {
 
 #endif // NOLA_FILE_SUPPORTED
 #endif // ADAFRUIT_VS1053_HPP
+
+/** @} */

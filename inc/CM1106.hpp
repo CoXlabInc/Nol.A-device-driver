@@ -1,6 +1,12 @@
 /**
  * @file CM1106.hpp
+ * @ingroup device_drivers
  * @brief Public driver declarations and configuration constants.
+ */
+
+/**
+ * @addtogroup device_drivers Device Drivers
+ * @{
  */
 #include <cox.h>
 
@@ -43,3 +49,5 @@ private:
   static void SerialDataReceived(void *ctx);
   void (*gotCO2callback)() = NULL;
 };
+
+/** @} */

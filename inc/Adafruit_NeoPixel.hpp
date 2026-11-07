@@ -1,6 +1,12 @@
 /**
  * @file Adafruit_NeoPixel.hpp
+ * @ingroup device_drivers
  * @brief Public driver declarations and configuration constants.
+ */
+
+/**
+ * @addtogroup device_drivers Device Drivers
+ * @{
  */
 /*--------------------------------------------------------------------
   This file is part of the Adafruit NeoPixel library.
@@ -267,3 +273,5 @@ class Adafruit_NeoPixel {
 };
 
 #endif // ADAFRUIT_NEOPIXEL_HPP
+
+/** @} */

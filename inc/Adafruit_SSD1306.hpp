@@ -1,5 +1,6 @@
 /*!
  * @file Adafruit_SSD1306.hpp
+ * @ingroup device_drivers
  *
  * This is part of for Adafruit's SSD1306 library for monochrome
  * OLED displays: http://www.adafruit.com/category/63_98
@@ -19,6 +20,11 @@
  * BSD license, all text above, and the splash screen header file,
  * must be included in any redistribution.
  *
+ */
+
+/**
+ * @addtogroup device_drivers Device Drivers
+ * @{
  */
 
 #pragma once
@@ -275,3 +281,5 @@ class Adafruit_SSD1306 : public Adafruit_GFX {
   uint32_t     restoreClk; // Wire speed following SSD1306 transfers
 
 };
+
+/** @} */

@@ -1,6 +1,12 @@
 /**
  * @file SparkFun_CCS811.hpp
+ * @ingroup device_drivers
  * @brief Public driver declarations and configuration constants.
+ */
+
+/**
+ * @addtogroup device_drivers Device Drivers
+ * @{
  */
 #ifndef SPARKFUN_CCS811_HPP
 #define SPARKFUN_CCS811_HPP
@@ -144,3 +150,5 @@ private:
 };
 
 #endif //SPARKFUN_CCS811_HPP
+
+/** @} */

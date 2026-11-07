@@ -1,6 +1,12 @@
 /**
  * @file MMA8452Q.hpp
+ * @ingroup device_drivers
  * @brief Public driver declarations and configuration constants.
+ */
+
+/**
+ * @addtogroup device_drivers Device Drivers
+ * @{
  */
 /*
  * The MIT License (MIT)
@@ -214,3 +220,5 @@ private:
 };
 
 #endif //MMA8452Q_HPP
+
+/** @} */

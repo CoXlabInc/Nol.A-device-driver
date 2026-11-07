@@ -1,6 +1,12 @@
 /**
  * @file Adafruit_GFX.hpp
+ * @ingroup device_drivers
  * @brief Public driver declarations and configuration constants.
+ */
+
+/**
+ * @addtogroup device_drivers Device Drivers
+ * @{
  */
 #ifndef _ADAFRUIT_GFX_H
 #define _ADAFRUIT_GFX_H
@@ -456,3 +462,5 @@ class GFXcanvas16 : public Adafruit_GFX {
 };
 
 #endif // _ADAFRUIT_GFX_H
+
+/** @} */

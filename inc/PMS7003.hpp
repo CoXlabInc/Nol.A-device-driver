@@ -1,3 +1,7 @@
+/**
+ * @file PMS7003.hpp
+ * @brief Public driver declarations and configuration constants.
+ */
 /*
  * The MIT License (MIT)
  *
@@ -33,23 +37,39 @@
 
 #include "PMS3003.hpp"
 
+/**
+ * @brief PMS7003 particulate sensor with particle-count reporting.
+ * Use inherited begin() before receiving measurements.
+ */
 class PMS7003 : public PMS3003 {
 public:
+  /**
+   * @brief Bind the sensor UART, SET pin, and RESET pin.
+   */
   PMS7003(SerialPort &port, int pinSet, int pinReset);
+  /**
+   * @brief One measurement frame. Mass concentrations are in micrograms/m^3;
+   * particle counts are cumulative counts above the indicated size per 100 mL.
+   */
   typedef struct {
-    int32_t pm1_CF1;
-    int32_t pm2_5_CF1;
-    int32_t pm10_CF1;
-    int32_t pm1_Atmosphere;
-    int32_t pm2_5_Atmosphere;
-    int32_t pm10_Atmosphere;
-    int32_t nParticlesBeyond0_3um_in100mL;
-    int32_t nParticlesBeyond0_5um_in100mL;
-    int32_t nParticlesBeyond1um_in100mL;
-    int32_t nParticlesBeyond2_5um_in100mL;
-    int32_t nParticlesBeyond5um_in100mL;
-    int32_t nParticlesBeyond10um_in100mL;
+    int32_t pm1_CF1; ///< PM1 concentration, CF=1, in micrograms/m^3; -1 on checksum error.
+    int32_t pm2_5_CF1; ///< PM2.5 concentration, CF=1, in micrograms/m^3; -1 on checksum error.
+    int32_t pm10_CF1; ///< PM10 concentration, CF=1, in micrograms/m^3; -1 on checksum error.
+    int32_t pm1_Atmosphere; ///< PM1 concentration, atmospheric, in micrograms/m^3; -1 on checksum error.
+    int32_t pm2_5_Atmosphere; ///< PM2.5 concentration, atmospheric, in micrograms/m^3; -1 on checksum error.
+    int32_t pm10_Atmosphere; ///< PM10 concentration, atmospheric, in micrograms/m^3; -1 on checksum error.
+    int32_t nParticlesBeyond0_3um_in100mL; ///< Particles above 0.3 micrometers per 100 mL; -1 on checksum error.
+    int32_t nParticlesBeyond0_5um_in100mL; ///< Particles above 0.5 micrometers per 100 mL; -1 on checksum error.
+    int32_t nParticlesBeyond1um_in100mL; ///< Particles above 1 micrometers per 100 mL; -1 on checksum error.
+    int32_t nParticlesBeyond2_5um_in100mL; ///< Particles above 2.5 micrometers per 100 mL; -1 on checksum error.
+    int32_t nParticlesBeyond5um_in100mL; ///< Particles above 5 micrometers per 100 mL; -1 on checksum error.
+    int32_t nParticlesBeyond10um_in100mL; ///< Particles above 10 micrometers per 100 mL; -1 on checksum error.
   } value_t;
+  /**
+   * @brief Register a completed-frame callback; all fields are -1 on checksum failure; nullptr disables it.
+   * @param func Receives a reference to driver-owned storage reused on the next frame.
+   * Copy the value inside the callback if it must be retained.
+   */
   void onReadDone(void (*func)(value_t &));
 
 protected:

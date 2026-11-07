@@ -1,3 +1,7 @@
+/**
+ * @file GPS.hpp
+ * @brief Public driver declarations and configuration constants.
+ */
 /*
  * The MIT License (MIT)
  *
@@ -33,8 +37,21 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+/**
+ * @brief Common GPS callback interface and NMEA parsers for device-specific drivers.
+ */
 class Gps {
 public:
+  /**
+   * @brief Register the GGA callback; nullptr disables legacy GGA notifications.
+   * @param func Receives fix quality (0 means invalid), UTC hour/minute/second, the
+   * unscaled fractional-second digits, encoded NMEA latitude/longitude, encoded
+   * altitude, and satellite count. Coordinates are not decimal degrees: the parser
+   * multiplies the degrees-and-minutes integer part by 100000 and adds the raw
+   * fractional digits, with negative values for south/west. Altitude similarly
+   * uses the integer part times 10 plus the fractional digits. Check fix quality
+   * before using position values; fractional fields are not normalized.
+   */
   void onReadDone(
     void (*func)(
       uint8_t fixQuality,
@@ -49,12 +66,26 @@ public:
     )
   );
 
+  /**
+   * @brief Enable reception or device power according to the concrete driver.
+   */
   virtual void turnOn() = 0;
 
+  /**
+   * @brief Disable reception or device power according to the concrete driver.
+   */
   virtual void turnOff() = 0;
 
+  /**
+   * @brief Return the concrete driver's reception or hardware power state.
+   */
   virtual bool isOn() = 0;
 
+  /**
+   * @brief Optional raw-NMEA notification used by MT3339 after receiving VTG.
+   * Invoked only when no onReadDone() callback is installed; read cached sentences
+   * during the callback because most caches are cleared immediately afterward.
+   */
   void (*onNMEAReceived)(Gps &) = nullptr;
 
 protected:

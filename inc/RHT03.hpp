@@ -1,3 +1,7 @@
+/**
+ * @file RHT03.hpp
+ * @brief Public driver declarations and configuration constants.
+ */
 /*
   The MIT License (MIT)
 
@@ -23,15 +27,41 @@
 #ifndef RHT03_HPP
 #define RHT03_HPP
 
+/** @brief Suggested RHT03 sampling interval in milliseconds; not enforced by update(). */
 #define RHT_READ_INTERVAL_MS 1000
 
+/**
+ * @brief Blocking RHT03 temperature/humidity reader. Call begin(), then update()
+ * before accessing cached readings; the caller controls the sampling interval.
+ */
 class RHT03 {
 public:
+    /**
+     * @brief Construct a reader without configuring a GPIO.
+     */
     RHT03();
+    /**
+     * @brief Bind and configure the data GPIO as INPUT_PULLUP.
+     * @param dataPin Sensor data pin.
+     */
     void begin(int dataPin);
+    /**
+     * @brief Read and validate a sensor frame synchronously.
+     * @return 1 on success; zero or negative values indicate timing or checksum errors.
+     * Only a successful read updates the cached temperature and humidity.
+     */
     int update();
+    /**
+     * @brief Return the cached temperature in degrees Celsius.
+     */
     float tempC();
+    /**
+     * @brief Return the cached temperature in degrees Fahrenheit.
+     */
     float tempF();
+    /**
+     * @brief Return the cached relative humidity in percent.
+     */
     float humidity();
 
 private:

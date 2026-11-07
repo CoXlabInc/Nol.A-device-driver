@@ -1,3 +1,7 @@
+/**
+ * @file ORG4400.hpp
+ * @brief Public driver declarations and configuration constants.
+ */
 /*
  * The MIT License (MIT)
  *
@@ -33,21 +37,47 @@
 #include <GPS.hpp>
 #include <SerialPort.hpp>
 
+/**
+ * @brief ORG4400 GPS receiver with on/off pulse and wakeup-status GPIOs.
+ * Call begin() and register the device-specific callback before enabling reception.
+ */
 class ORG4400 : public Gps {
 public:
+  /**
+   * @brief Bind UART, on/off output pin, and wakeup-status input pin.
+   */
   ORG4400(SerialPort &uart, int8_t pinOnOff, int8_t pinWakeup);
 
+  /**
+   * @brief Configure 4800-baud reception and GPIO; listen if the receiver is already on.
+   */
   void begin();
 
+  /**
+   * @brief Register the legacy position callback; nullptr disables notification.
+   * @param func Receives encoded latitude, longitude, altitude, and satellite count.
+   * The legacy parser combines integer and fractional fields with bitwise OR
+   * (coordinate integer parts are multiplied by 10000, altitude by 10) and ignores
+   * hemisphere indicators. Values must not be treated as signed decimal degrees.
+   */
   void onReadDone(void (*func)(int32_t latitude,
                                int32_t longitude,
                                int32_t altitude,
                                uint8_t numSatellites));
 
+  /**
+   * @brief If off, enable reception and pulse the hardware on/off pin.
+   */
   void turnOn();
 
+  /**
+   * @brief If on, pulse the hardware on/off pin and stop UART input/listening.
+   */
   void turnOff();
 
+  /**
+   * @brief Return true when the receiver wakeup-status pin is high.
+   */
   bool isOn();
 
 private:

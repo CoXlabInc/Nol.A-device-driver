@@ -1,3 +1,7 @@
+/**
+ * @file Adafruit_AMG88xx.hpp
+ * @brief Public driver declarations and configuration constants.
+ */
 /*
 # Adafruit AMG88xx Library
 
@@ -23,6 +27,7 @@ MIT license, all text above must be included in any redistribution
 /*=========================================================================
     I2C ADDRESS/BITS
     -----------------------------------------------------------------------*/
+/** @brief Default 7-bit AMG88xx address. */
     #define AMG88xx_ADDRESS                (0x69)
 /*=========================================================================*/
 
@@ -51,6 +56,9 @@ MIT license, all text above must be included in any redistribution
 		AMG88xx_PIXEL_OFFSET = 0x80
     };
 	
+ /**
+  * @brief Power-control register mode values.
+  */
 	enum power_modes{
 		AMG88xx_NORMAL_MODE = 0x00,
 		AMG88xx_SLEEP_MODE = 0x01,
@@ -58,21 +66,33 @@ MIT license, all text above must be included in any redistribution
 		AMG88xx_STAND_BY_10 = 0x21
 	};
 	
+ /**
+  * @brief Software-reset command values.
+  */
 	enum sw_resets {
 		AMG88xx_FLAG_RESET = 0x30,
 		AMG88xx_INITIAL_RESET = 0x3F
 	};
 	
+ /**
+  * @brief Thermal frame-rate register values.
+  */
 	enum frame_rates {
 		AMG88xx_FPS_10 = 0x00,
 		AMG88xx_FPS_1 = 0x01
 	};
 	
+ /**
+  * @brief Interrupt-output enable bit values.
+  */
 	enum int_enables{
 		AMG88xx_INT_DISABLED = 0x00,
 		AMG88xx_INT_ENABLED = 0x01
 	};
 	
+ /**
+  * @brief Difference or absolute-temperature interrupt comparison modes.
+  */
 	enum int_modes {
 		AMG88xx_DIFFERENCE = 0x00,
 		AMG88xx_ABSOLUTE_VALUE = 0x01
@@ -80,8 +100,11 @@ MIT license, all text above must be included in any redistribution
 	
 /*=========================================================================*/
 
+/** @brief Number of pixels in the 8 by 8 thermal array. */
 #define AMG88xx_PIXEL_ARRAY_SIZE 64
+/** @brief Degrees Celsius per raw infrared pixel count. */
 #define AMG88xx_PIXEL_TEMP_CONVERSION .25
+/** @brief Degrees Celsius per raw thermistor count. */
 #define AMG88xx_THERMISTOR_CONVERSION .0625
 
 /**************************************************************************/
@@ -92,26 +115,68 @@ MIT license, all text above must be included in any redistribution
 class Adafruit_AMG88xx {
 	public:
 		//constructors
+  /**
+   * @brief Bind the I2C bus and 7-bit sensor address; call begin() before reading.
+   */
 		Adafruit_AMG88xx(TwoWire &w, uint8_t addr = AMG88xx_ADDRESS) : Wire(w), _i2caddr(addr) {};
+  /**
+   * @brief Destroy the wrapper without taking ownership of the I2C bus.
+   */
 		~Adafruit_AMG88xx(void) {};
 		
+  /**
+   * @brief Initialize I2C and configure normal mode, 10 FPS, and disabled interrupts.
+   * @return Always true in this implementation; transfer failures are not checked.
+   */
 		bool begin();
 		
+  /**
+   * @brief Read infrared pixel temperatures in degrees Celsius.
+   * @param buf Output array of at least size floats.
+   * @param size Number of pixels, 1 through 64; larger values are unsafe.
+   */
 		void readPixels(float *buf, uint8_t size = AMG88xx_PIXEL_ARRAY_SIZE);
+  /**
+   * @brief Return the internal thermistor temperature in degrees Celsius.
+   */
 		float readThermistor();
 		
+  /**
+   * @brief Enable (true) or disable (false) the hardware moving average.
+   */
 		void setMovingAverageMode(bool mode);
 		
+  /**
+   * @brief Enable the sensor interrupt output.
+   */
 		void	  enableInterrupt();
+  /**
+   * @brief Disable the sensor interrupt output.
+   */
 		void	  disableInterrupt();
+  /**
+   * @brief Select AMG88xx_DIFFERENCE or AMG88xx_ABSOLUTE_VALUE interrupt mode.
+   */
 		void	  setInterruptMode(uint8_t mode);
+  /**
+   * @brief Read the per-pixel interrupt bitmap into buf; size is a byte count up to 8.
+   */
 		void	  getInterrupt(uint8_t *buf, uint8_t size = 8);
+  /**
+   * @brief Clear sensor interrupt flags using the flag-reset command.
+   */
 		void	  clearInterrupt();
 				
 		//this will automatically set hysteresis to 95% of the high value
+  /**
+   * @brief Set high/low temperature thresholds in degrees Celsius; hysteresis is 95% of high.
+   */
 		void	  setInterruptLevels(float high, float low);
 				
 		//this will manually set hysteresis
+  /**
+   * @brief Set high/low thresholds and hysteresis explicitly, all in degrees Celsius.
+   */
 		void	  setInterruptLevels(float high, float low, float hysteresis);
 		
 	private:

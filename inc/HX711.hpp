@@ -1,3 +1,7 @@
+/**
+ * @file HX711.hpp
+ * @brief Public driver declarations and configuration constants.
+ */
 /*
  * The MIT License (MIT)
  *
@@ -50,16 +54,50 @@
 
 #include "cox.h"
 
+/**
+ * @brief Blocking HX711 load-cell reader with offset and scale calibration.
+ * Reads wait indefinitely for data-ready. Call begin() with the scale unloaded.
+ */
 class Hx711 {
 public:
+  /**
+   * @brief Bind the data-output pin (pin_din) and serial-clock pin (pin_slk).
+   */
   Hx711(uint8_t pin_din, uint8_t pin_slk);
+  /**
+   * @brief Configure GPIO, zero using 32 samples, and set the default scale of 742.
+   */
   void begin();
+  /**
+   * @brief Return one calibrated sample in milligrams using (raw - offset) * 1000 / scale.
+   */
   int32_t getMilligram();
+  /**
+   * @brief Return an averaged calibrated reading in milligrams.
+   * @param times Number of raw samples to average; must be greater than zero.
+   */
   int32_t getAveragedMilligram(uint8_t times = 32);
+  /**
+   * @brief Set the raw ADC count subtracted before scaling.
+   * @param offset Zero-load ADC offset.
+   */
   void setOffset(int32_t offset);
+  /**
+   * @brief Return the current zero-load offset in raw ADC counts.
+   */
   int32_t getOffset();
+  /**
+   * @brief Set the calibration divisor in ADC counts per gram.
+   * @param scale Nonzero divisor, default 742; the driver does not validate it.
+   */
   void setScale(int32_t scale = 742);
+  /**
+   * @brief Return the current calibration divisor in ADC counts per gram.
+   */
   int32_t getScale();
+  /**
+   * @brief Average 32 raw samples and store the result as the zero-load offset.
+   */
   void adjustZero();
 
 private:

@@ -1,3 +1,7 @@
+/**
+ * @file M25P32.hpp
+ * @brief Public driver declarations and configuration constants.
+ */
 /*
  * The MIT License (MIT)
  *
@@ -35,14 +39,54 @@
 #include "Storage.hpp"
 #include "SPI.hpp"
 
+/**
+ * @brief Blocking SPI NOR flash Storage implementation. Call begin() first.
+ * The last 64 KiB sector is reserved for write backup; operations can wait
+ * indefinitely for the device to finish programming or erasing.
+ */
 class M25P32 : public Storage {
 public:
+  /**
+   * @brief Bind the active-low chip-select GPIO and SPI bus.
+   */
   M25P32(uint8_t pinChipSelect, SPI &);
+  /**
+   * @brief Initialize chip select, read device information, disable writes, and enter sleep.
+   */
   void begin();
+  /**
+   * @brief Return the exposed capacity in bytes (0x3F0000), excluding the backup sector.
+   */
   uint64_t length();
+  /**
+   * @brief Read one byte at the byte address.
+   * @return Read value, or 0xFF on invalid address (also a valid stored value).
+   */
   uint8_t read(uint64_t addr);
+  /**
+   * @brief Read bytes into caller-provided storage.
+   * @param dst Writable buffer of at least len bytes.
+   * @param addr Starting byte address; keep the entire range within length().
+   * @param len Nonzero byte count.
+   * @return ERROR_INVALID_ARGS for an invalid start or zero length, otherwise ERROR_SUCCESS.
+   */
   error_t read(void *dst, uint64_t addr, uint32_t len);
+  /**
+   * @brief Write a byte using the sector backup/erase procedure.
+   * @param addr Target byte address below length().
+   * @param value Byte to store.
+   * @return ERROR_INVALID_ARGS for an invalid address; otherwise ERROR_FAIL even
+   * after programming, matching the current implementation.
+   */
   error_t write(uint64_t addr, uint8_t value);
+  /**
+   * @brief Rewrite affected sectors via the reserved backup sector.
+   * @param buf Source buffer containing at least len bytes.
+   * @param addr Starting byte address; keep the entire range within length().
+   * @param len Nonzero byte count.
+   * @return ERROR_INVALID_ARGS for an invalid start or zero length; otherwise
+   * ERROR_FAIL even after programming, matching the current implementation.
+   */
   error_t write(const uint8_t *buf, uint64_t addr, uint32_t len);
 
 private:

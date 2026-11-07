@@ -1,3 +1,7 @@
+/**
+ * @file EVAM8M.hpp
+ * @brief Public driver declarations and configuration constants.
+ */
 /*
  * The MIT License (MIT)
  *
@@ -33,34 +37,80 @@
 #include <GPS.hpp>
 #include <SerialPort.hpp>
 
+/**
+ * @brief EVA-M8M NMEA receiver. Call begin(), register callbacks, then turnOn().
+ * The UART must outlive the driver; turnOn()/turnOff() control listening only.
+ */
 class EVAM8M : public Gps {
 public:
+  /**
+   * @brief Bind the receiver UART without starting reception.
+   */
   EVAM8M(SerialPort &uart);
 
+  /**
+   * @brief Configure 9600-baud NMEA reception; listening remains disabled.
+   */
   void begin();
 
+  /**
+   * @brief Start listening for NMEA sentences.
+   */
   void turnOn();
 
+  /**
+   * @brief Stop listening without switching off receiver power.
+   */
   void turnOff();
 
+  /**
+   * @brief Return whether the UART is currently listening.
+   */
   bool isOn();
 
+  /**
+   * @brief Enable parsing and caching of subsequent GNGSA sentences.
+   */
   void useGSA();
 
+  /**
+   * @brief Return cached GSA operating mode (A/M), or NUL before a valid GSA.
+   */
   char getGsaOpMode();
 
+  /**
+   * @brief Return cached GSA navigation mode (1=no fix, 2=2D, 3=3D), initially 0.
+   */
   uint8_t getGsaNavMode();
 
+  /**
+   * @brief Return cached dimensionless position dilution of precision, initially 99.99.
+   */
   float getGsaPDoP();
 
+  /**
+   * @brief Return cached dimensionless horizontal dilution of precision, initially 99.99.
+   */
   float getGsaHDoP();
 
+  /**
+   * @brief Return cached dimensionless vertical dilution of precision, initially 99.99.
+   */
   float getGsaVDoP();
 
+  /**
+   * @brief Enable parsing and caching of subsequent GNRMC speed and course fields.
+   */
   void useRMC();
 
+  /**
+   * @brief Return cached RMC speed over ground in knots; initially zero.
+   */
   float getRmcSpeedOverGround();
 
+  /**
+   * @brief Return cached RMC course over ground in degrees; initially zero.
+   */
   float getRmcCourseOverGround();
 
 private:

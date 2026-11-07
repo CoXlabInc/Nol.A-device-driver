@@ -1,3 +1,7 @@
+/**
+ * @file HTU20D.hpp
+ * @brief Public driver declarations and configuration constants.
+ */
 /*
  * The MIT License (MIT)
  *
@@ -34,16 +38,42 @@
 #include <TwoWire.hpp>
 #include <Timer.hpp>
 
+/**
+ * @brief Timer-driven asynchronous HTU20D temperature and humidity driver.
+ * Initialize the I2C bus, call begin(), and register callbacks before requesting readings.
+ * Keep the driver and bus alive until the measurement completes.
+ */
 class HTU20D {
 public:
+  /**
+   * @brief Bind an initialized I2C bus and initialize the measurement timer.
+   */
   void begin(TwoWire &);
 
+  /**
+   * @brief Register the temperature callback; nullptr disables notification.
+   * @param func Receives the integer result 17572 * raw / 65536 - 4685, nominally
+   * hundredths of a degree Celsius. Negative results wrap in the uint16_t argument.
+   */
   void onTemperatureReadDone(void (*func)(uint16_t val));
 
+  /**
+   * @brief Start a temperature measurement, replacing any pending measurement.
+   * Reads after 50 ms and retries every 10 ms while no bytes are available; no timeout.
+   */
   void readTemperature();
 
+  /**
+   * @brief Register the humidity callback; nullptr disables notification.
+   * @param func Receives the current driver formula 12500 * raw / 65536 - 6.
+   * This is not directly percent RH; the offset is not scaled like the raw term.
+   */
   void onHumidityReadDone(void (*func)(uint16_t val));
 
+  /**
+   * @brief Start a humidity measurement, replacing any pending measurement.
+   * Reads after 50 ms and retries every 10 ms while no bytes are available; CRC is not checked.
+   */
   void readHumidity();
 
 private:

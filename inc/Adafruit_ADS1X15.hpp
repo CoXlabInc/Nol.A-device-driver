@@ -153,23 +153,78 @@ protected:
   uint16_t m_dataRate;           ///< Data rate
 
 public:
+  /**
+   * @brief Bind the I2C bus and address. Use an ADS1015/ADS1115 subclass to set resolution defaults.
+   */
   Adafruit_ADS1X15(TwoWire &w, uint8_t i2c_addr = ADS1X15_ADDRESS);
+  /**
+   * @brief Initialize I2C and probe the configured address; return true on acknowledgement.
+   */
   bool begin();
+  /**
+   * @brief Block for a single-ended raw ADC conversion.
+   * @param channel Input channel 0 through 3.
+   * @return ADC counts, or zero for an invalid channel. No conversion timeout is enforced.
+   */
   int16_t readADC_SingleEnded(uint8_t channel);
+  /**
+   * @brief Block for raw signed ADC counts from AIN0 minus AIN1.
+   */
   int16_t readADC_Differential_0_1();
+  /**
+   * @brief Block for raw signed ADC counts from AIN0 minus AIN3.
+   */
   int16_t readADC_Differential_0_3();
+  /**
+   * @brief Block for raw signed ADC counts from AIN1 minus AIN3.
+   */
   int16_t readADC_Differential_1_3();
+  /**
+   * @brief Block for raw signed ADC counts from AIN2 minus AIN3.
+   */
   int16_t readADC_Differential_2_3();
+  /**
+   * @brief Start continuous comparator operation for channel 0 through 3.
+   * @param channel Single-ended input.
+   * @param threshold Comparator threshold in ADC counts.
+   */
   void startComparator_SingleEnded(uint8_t channel, int16_t threshold);
+  /**
+   * @brief Read the conversion register and return signed counts at the device resolution.
+   */
   int16_t getLastConversionResults();
+  /**
+   * @brief Convert counts to volts using the configured gain and ADC resolution.
+   */
   float computeVolts(int16_t counts);
+  /**
+   * @brief Cache the PGA gain used by subsequent conversions and computeVolts().
+   */
   void setGain(adsGain_t gain);
+  /**
+   * @brief Return the cached PGA gain.
+   */
   adsGain_t getGain();
+  /**
+   * @brief Cache a device-specific RATE_ADS1015_* or RATE_ADS1115_* register setting.
+   */
   void setDataRate(uint16_t rate);
+  /**
+   * @brief Return the cached data-rate register setting, not a numeric samples/second value.
+   */
   uint16_t getDataRate();
 
+  /**
+   * @brief Start a conversion without waiting.
+   * @param mux ADS1X15_REG_CONFIG_MUX_* channel selection.
+   * @param continuous True selects continuous conversion; false selects single-shot.
+   * Poll conversionComplete() for single-shot completion, then read the result.
+   */
   void startADCReading(uint16_t mux, bool continuous);
 
+  /**
+   * @brief Return the configuration OS bit; used to poll single-shot completion.
+   */
   bool conversionComplete();
 
 private:
@@ -185,6 +240,9 @@ private:
 /**************************************************************************/
 class Adafruit_ADS1015 : public Adafruit_ADS1X15 {
 public:
+  /**
+   * @brief Bind a 12-bit ADS1015; defaults are gain 2/3 and 1600 samples/second.
+   */
   Adafruit_ADS1015(TwoWire &, uint8_t i2cAddr = ADS1X15_ADDRESS);
 };
 
@@ -195,6 +253,9 @@ public:
 /**************************************************************************/
 class Adafruit_ADS1115 : public Adafruit_ADS1X15 {
 public:
+  /**
+   * @brief Bind a 16-bit ADS1115; defaults are gain 2/3 and 128 samples/second.
+   */
   Adafruit_ADS1115(TwoWire &, uint8_t i2cAddr = ADS1X15_ADDRESS);
 };
 

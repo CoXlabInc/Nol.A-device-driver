@@ -1,3 +1,7 @@
+/**
+ * @file PMS3003.hpp
+ * @brief Public driver declarations and configuration constants.
+ */
 /*
  * The MIT License (MIT)
  *
@@ -32,11 +36,26 @@
 #ifndef PMS3003_HPP
 #define PMS3003_HPP
 
+/**
+ * @brief Asynchronous Plantower PMS3003 particulate sensor.
+ * Call begin() and install a callback; keep the UART and driver alive while receiving.
+ */
 class PMS3003 {
 public:
+  /**
+   * @brief Bind the UART, SET output pin, and RESET output pin.
+   */
   PMS3003(SerialPort &, int pinSet, int pinReset);
+  /**
+   * @brief Configure the sensor UART and control pins, then start listening.
+   */
   void begin();
 
+  /**
+   * @brief Register notification for a complete measurement frame.
+   * @param func Receives PM1.0, PM2.5, and PM10 mass concentrations in micrograms/m^3
+   * for CF=1 and atmospheric calibration, respectively. All six values are -1 on checksum failure; nullptr disables notification.
+   */
   void onReadDone(void (*func)(int32_t pm1_0_CF1,
                                int32_t pm2_5_CF1,
                                int32_t pm10_0_CF1,

@@ -1,3 +1,7 @@
+/**
+ * @file SHTSensor.hpp
+ * @brief Public driver declarations and configuration constants.
+ */
 /*
  *  Copyright (c) 2022, CoXlab Inc. <jsjeong@coxlab.kr>
  *  Copyright (c) 2018, Sensirion AG <andreas.brauchli@sensirion.com>
@@ -90,7 +94,7 @@ public:
   /**
    * Instantiate a new SHTSensor
    * By default, the i2c bus is queried for known SHT Sensors. To address
-   * a specific sensor, set the `sensorType'.
+   * a specific sensor, set the `sensorType`.
    */
   SHTSensor(SHTSensorType sensorType = AUTO_DETECT)
       : mSensorType(sensorType),
@@ -100,6 +104,9 @@ public:
   {
   }
 
+  /**
+   * @brief Release the owned digital sensor driver.
+   */
   virtual ~SHTSensor() {
     cleanup();
   }
@@ -150,6 +157,9 @@ public:
    */
   bool setAccuracy(SHTAccuracy newAccuracy);
 
+  /**
+   * @brief Sensor selection supplied to the constructor; configure before init().
+   */
   SHTSensorType mSensorType;
 
 private:
@@ -157,7 +167,9 @@ private:
 
 
   SHTSensorDriver *mSensor;
+  /** @brief Cached temperature in degrees Celsius. */
   float mTemperature;
+  /** @brief Cached relative humidity in percent. */
   float mHumidity;
 };
 
@@ -166,6 +178,9 @@ private:
 class SHTSensorDriver
 {
 public:
+  /**
+   * @brief Virtual destructor for concrete sensor drivers.
+   */
   virtual ~SHTSensorDriver() = 0;
 
   /**
@@ -188,14 +203,16 @@ public:
   }
 
   /**
-   * Get the humidity in percent read from the last sample
+   * Get the temperature in degrees Celsius read from the last sample
    * Use readSample() to trigger a new sensor reading
    */
   float getTemperature() const {
     return mTemperature;
   }
 
+  /** @brief Cached temperature in degrees Celsius. */
   float mTemperature;
+  /** @brief Cached relative humidity in percent. */
   float mHumidity;
 };
 
@@ -210,11 +227,11 @@ public:
 
   /**
    * Constructor for i2c SHT Sensors
-   * Takes the `i2cAddress' to read, the `i2cCommand' issues when sampling
-   * the sensor and the values `a', `b', `c' to convert the fixed-point
+   * Takes the `i2cAddress` to read, the `i2cCommand` issues when sampling
+   * the sensor and the values `a`, `b`, `c` to convert the fixed-point
    * temperature value received by the sensor to a floating point value using
    * the formula: temperature = a + b * (rawTemperature / c)
-   * and the values `x' and `y' to convert the fixed-point humidity value
+   * and the values `x` and `y` to convert the fixed-point humidity value
    * received by the sensor to a floating point value using the formula:
    * humidity = x + y * (rawHumidity / z)
    * duration is the duration in milliseconds of one measurement
@@ -229,22 +246,58 @@ public:
   {
   }
 
+  /**
+   * @brief Destroy the I2C driver without taking ownership of the bus.
+   */
   virtual ~SHTI2cSensor()
   {
   }
 
   virtual bool readSample();
 
+  /**
+   * @brief 7-bit I2C sensor address.
+   */
   uint8_t mI2cAddress;
+  /**
+   * @brief Measurement command sent before reading a sample.
+   */
   uint16_t mI2cCommand;
+  /**
+   * @brief Measurement delay in milliseconds.
+   */
   uint8_t mDuration;
+  /**
+   * @brief Temperature conversion offset: temperature = mA + mB * raw / mC.
+   */
   float mA;
+  /**
+   * @brief Temperature conversion multiplier.
+   */
   float mB;
+  /**
+   * @brief Nonzero temperature conversion divisor.
+   */
   float mC;
+  /**
+   * @brief Humidity conversion offset: humidity = mX + mY * raw / mZ.
+   */
   float mX;
+  /**
+   * @brief Humidity conversion multiplier.
+   */
   float mY;
+  /**
+   * @brief Nonzero humidity conversion divisor.
+   */
   float mZ;
+  /**
+   * @brief Measurement command length in bytes.
+   */
   uint8_t mCmd_Size;
+  /**
+   * @brief Borrowed I2C bus used for sensor transactions.
+   */
   TwoWire & mWire;
 
 private:
@@ -256,6 +309,9 @@ private:
                           uint8_t dataLength, uint8_t duration);
 };
 
+/**
+ * @brief Analog SHT3x reader with configurable ADC resolution.
+ */
 class SHT3xAnalogSensor
 {
 public:
@@ -263,7 +319,7 @@ public:
   /**
    * Instantiate a new Sensirion SHT3x Analog sensor driver instance.
    * The required paramters are `humidityPin` and `temperaturePin`
-   * An optional `readResolutionBits' can be set since the Arduino/Genuino Zero
+   * An optional `readResolutionBits` can be set since the Arduino/Genuino Zero
    * support 12bit precision analog readings. By default, 10 bit precision is
    * used.
    *
@@ -279,14 +335,32 @@ public:
   {
   }
 
+  /**
+   * @brief Destroy the analog sensor wrapper.
+   */
   virtual ~SHT3xAnalogSensor()
   {
   }
 
+  /**
+   * @brief Sample the humidity ADC pin and return percent relative humidity.
+   */
   float readHumidity();
+  /**
+   * @brief Sample the temperature ADC pin and return degrees Celsius.
+   */
   float readTemperature();
 
+  /**
+   * @brief Analog input pin used for humidity.
+   */
   uint8_t mHumidityAdcPin;
+  /**
+   * @brief Analog input pin used for temperature.
+   */
   uint8_t mTemperatureAdcPin;
+  /**
+   * @brief ADC resolution used to scale raw readings (default 10 bits).
+   */
   uint8_t mReadResolutionBits;
 };

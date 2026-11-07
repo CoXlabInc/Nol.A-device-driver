@@ -1,3 +1,7 @@
+/**
+ * @file SparkFun_BQ27441.hpp
+ * @brief Public driver declarations and configuration constants.
+ */
 /******************************************************************************
 SparkFunBQ27441.hpp
 BQ27441 Nol.A-SDK Library Main Header File
@@ -41,18 +45,23 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 #include <nola-common.h>
 #include <TwoWire.hpp>
 
+/** @brief BQ27441 polling timeout in milliseconds. */
 #define BQ72441_I2C_TIMEOUT 2000
 
+/**
+ * @brief BQ27441 battery fuel-gauge interface. Call begin() before other operations.
+ * The I2C bus is borrowed and must outlive the driver.
+ */
 class BQ27441 {
 public:
-	// Parameters for the current() function, to specify which current to read
+	/** @brief Parameters for the current() function, to specify which current to read */
 	typedef enum {
 		AVG,  // Average Current (DEFAULT)
 		STBY, // Standby Current
 		MAX   // Max Current
 	} current_measure;
 
-	// Parameters for the capacity() function, to specify which capacity to read
+	/** @brief Parameters for the capacity() function, to specify which capacity to read */
 	typedef enum {
 		REMAIN,     // Remaining Capacity (DEFAULT)
 		FULL,       // Full Capacity
@@ -65,25 +74,25 @@ public:
 		DESIGN      // Design Capacity
 	} capacity_measure;
 
-	// Parameters for the soc() function
+	/** @brief Parameters for the soc() function */
 	typedef enum {
 		FILTERED,  // State of Charge Filtered (DEFAULT)
 		UNFILTERED // State of Charge Unfiltered
 	} soc_measure;
 
-	// Parameters for the soh() function
+	/** @brief Parameters for the soh() function */
 	typedef enum {
 		PERCENT,  // State of Health Percentage (DEFAULT)
 		SOH_STAT  // State of Health Status Bits
 	} soh_measure;
 
-	// Parameters for the temperature() function
+	/** @brief Parameters for the temperature() function */
 	typedef enum {
 		BATTERY,      // Battery Temperature (DEFAULT)
 		INTERNAL_TEMP // Internal IC Temperature
 	} temp_measure;
 
-	// Parameters for the setGPOUTFunction() funciton
+	/** @brief Parameters for the setGPOUTFunction() funciton */
 	typedef enum {
 		SOC_INT, // Set GPOUT to SOC_INT functionality
 		BAT_LOW  // Set GPOUT to BAT_LOW functionality
@@ -93,7 +102,7 @@ public:
 	// Initialization Functions //
 	//////////////////////////////
 	/**
-	    Initializes class variables
+	    Initializes class variables and binds the I2C bus and 7-bit address.
 	*/
 	BQ27441(TwoWire &, uint8_t addr = I2C_ADDRESS);
 
@@ -108,7 +117,7 @@ public:
 	/**
 	    Configures the design capacity of the connected battery.
 
-		@param capacity of battery (unsigned 16-bit value)
+		@param capacity Design capacity of battery in mAh (unsigned 16-bit value)
 		@return true if capacity successfully set.
 	*/
 	bool setCapacity(uint16_t capacity);
@@ -126,7 +135,7 @@ public:
 	/**
 	    Reads and returns the specified current measurement
 
-		@param current_measure enum specifying current value to be read
+		@param type Enum specifying current value to be read
 		@return specified current measurement in mA. >0 indicates charging.
 	*/
 	int16_t current(current_measure type = AVG);
@@ -134,7 +143,7 @@ public:
 	/**
 	    Reads and returns the specified capacity measurement
 
-		@param capacity_measure enum specifying capacity value to be read
+		@param type Enum specifying capacity value to be read
 		@return specified capacity measurement in mAh.
 	*/
 	uint16_t capacity(capacity_measure type = REMAIN);
@@ -142,14 +151,14 @@ public:
 	/**
 	    Reads and returns measured average power
 
-		@return average power in mAh. >0 indicates charging.
+		@return average power in mW. >0 indicates charging.
 	*/
 	int16_t power(void);
 
 	/**
 	    Reads and returns specified state of charge measurement
 
-		@param soc_measure enum specifying filtered or unfiltered measurement
+		@param type Enum specifying filtered or unfiltered measurement
 		@return specified state of charge measurement in %
 	*/
 	uint16_t soc(soc_measure type = FILTERED);
@@ -157,7 +166,7 @@ public:
 	/**
 	    Reads and returns specified state of health measurement
 
-		@param soh_measure enum specifying filtered or unfiltered measurement
+		@param type Enum specifying filtered or unfiltered measurement
 		@return specified state of health measurement in %, or status bits
 	*/
 	uint8_t soh(soh_measure type = PERCENT);
@@ -165,8 +174,8 @@ public:
 	/**
 	    Reads and returns specified temperature measurement
 
-		@param temp_measure enum specifying internal or battery measurement
-		@return specified temperature measurement in degrees C
+		@param type Enum specifying internal or battery measurement
+		@return Raw temperature register in tenths of kelvin; no Celsius conversion is performed.
 	*/
 	uint16_t temperature(temp_measure type = BATTERY);
 
@@ -220,7 +229,8 @@ public:
 	/**
 	    Set the SOC1 set and clear thresholds to a percentage
 
-		@param set and clear percentages between 0 and 100. clear > set.
+		@param set Set percentage between 0 and 100.
+     * @param clear Clear percentage between 0 and 100; must exceed set.
 		@return true on success
 	*/
 	bool setSOC1Thresholds(uint8_t set, uint8_t clear);
@@ -242,7 +252,8 @@ public:
 	/**
 	    Set the SOCF set and clear thresholds to a percentage
 
-		@param set and clear percentages between 0 and 100. clear > set.
+		@param set Set percentage between 0 and 100.
+     * @param clear Clear percentage between 0 and 100; must exceed set.
 		@return true on success
 	*/
 	bool setSOCFThresholds(uint8_t set, uint8_t clear);
@@ -271,7 +282,7 @@ public:
 	/**
 	    Set the SOC_INT interval delta to a value between 1 and 100
 
-		@param interval percentage value between 1 and 100
+		@param delta Interval percentage value between 1 and 100
 		@return true on success
 	*/
 	bool setSOCIDelta(uint8_t delta);
@@ -364,7 +375,7 @@ private:
 	/**
 	    Write the 16-bit opConfig register in extended data
 
-		@param New 16-bit value for opConfig
+		@param value New 16-bit value for opConfig
 		@return true on success
 	*/
 	bool writeOpConfig(uint16_t value);
@@ -445,7 +456,7 @@ private:
 	    Use BlockData() to write a byte to an offset of the loaded data
 
 		@param offset is the position of the byte to be written
-		       data is the value to be written
+		       @param data Value to be written
 		@return true on success
 	*/
 	bool writeBlockData(uint8_t offset, uint8_t data);
@@ -470,7 +481,7 @@ private:
 	    Read a byte from extended data specifying a class ID and position offset
 
 		@param classID is the id of the class to be read from
-		       offset is the byte position of the byte to be read
+		       @param offset Byte position of the byte to be read
 		@return 8-bit value of specified data
 	*/
 	uint8_t readExtendedData(uint8_t classID, uint8_t offset);
@@ -480,9 +491,9 @@ private:
 		class ID, position offset.
 
 		@param classID is the id of the class to be read from
-		       offset is the byte position of the byte to be read
-			   data is the data buffer to be written
-			   len is the number of bytes to be written
+		       @param offset Byte position of the byte to be read
+			   @param data Data buffer to be written
+			   @param len Number of bytes to be written
 		@return true on success
 	*/
 	bool writeExtendedData(uint8_t classID, uint8_t offset, uint8_t * data, uint8_t len);
@@ -495,8 +506,8 @@ private:
 	    Read a specified number of bytes over I2C at a given subAddress
 
 		@param subAddress is the 8-bit address of the data to be read
-		       dest is the data buffer to be written to
-			   count is the number of bytes to be read
+		       @param dest Data buffer to be written to
+			   @param count Number of bytes to be read
 		@return true on success
 	*/
 	int16_t i2cReadBytes(uint8_t subAddress, uint8_t * dest, uint8_t count);
@@ -505,8 +516,8 @@ private:
 	    Write a specified number of bytes over I2C to a given subAddress
 
 		@param subAddress is the 8-bit address of the data to be written to
-		       src is the data buffer to be written
-			   count is the number of bytes to be written
+		       @param src Data buffer to be written
+			   @param count Number of bytes to be written
 		@return true on success
 	*/
 	uint16_t i2cWriteBytes(uint8_t subAddress, uint8_t * src, uint8_t count);

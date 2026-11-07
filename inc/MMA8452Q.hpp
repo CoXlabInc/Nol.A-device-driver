@@ -1,3 +1,7 @@
+/**
+ * @file MMA8452Q.hpp
+ * @brief Public driver declarations and configuration constants.
+ */
 /*
  * The MIT License (MIT)
  *
@@ -33,17 +37,49 @@
 #include <stdint.h>
 #include <TwoWire.hpp>
 
+/**
+ * @brief MMA8452Q accelerometer register driver with optional interrupt GPIOs.
+ * Initialize the I2C bus before begin(); communication errors are not reported.
+ */
 class MMA8452Q {
 public:
+  /**
+   * @brief Bind the bus/address and attach falling-edge interrupt handlers.
+   * @param wire Initialized I2C bus that outlives the driver.
+   * @param addr 7-bit sensor address.
+   * @param pinInt1 Optional INT1 GPIO; -1 disables attachment.
+   * @param pinInt2 Optional INT2 GPIO; -1 disables attachment.
+   */
   void begin(TwoWire &wire, uint8_t addr, int8_t pinInt1 = -1, int8_t pinInt2 = -1);
 
+  /**
+   * @brief Return the WHO_AM_I register byte.
+   */
   uint8_t readSensorId();
+  /**
+   * @brief Read and assemble signed axis register values without conversion to g.
+   * @param x Optional X output; nullptr skips storing it.
+   * @param y Optional Y output; nullptr skips storing it.
+   * @param z Optional Z output; nullptr skips storing it.
+   * The current implementation combines each high byte shifted by four with the
+   * unshifted low byte, then sign-extends bit 11; it does not normalize the low byte.
+   */
   void readXYZ(int16_t *x, int16_t *y, int16_t *z);
 
+  /**
+   * @brief Return the ACTIVE bit from the control register.
+   */
   bool isActive();
+  /**
+   * @brief Set the ACTIVE bit to enable measurements.
+   */
   void setActive();
+  /**
+   * @brief Clear the ACTIVE bit to enter standby.
+   */
   void setStandby();
 
+  /** @brief Output data rate selections in hertz. */
   typedef enum {
     ODR_800Hz = 0,
     ODR_400Hz = 1,
@@ -54,23 +90,49 @@ public:
     ODR_6p25Hz = 6,
     ODR_1p56Hz = 7,
   } ODR_t;
+  /**
+   * @brief Return the configured output data rate.
+   */
   ODR_t getODR();
+  /**
+   * @brief Set the output data rate, temporarily entering standby if needed.
+   * @param val Output data rate selection.
+   */
   void setODR(ODR_t val);
 
+  /**
+   * @brief Register the transient interrupt callback; nullptr disables notification.
+   * @param func Receives this driver when a transient interrupt is handled.
+   */
   void onDetectTransient(void (*func)(MMA8452Q &));
+  /**
+   * @brief Configure transient detection and restore the previous active state.
+   * @param enableX Requested X-axis enable; currently not applied independently (X follows enableZ).
+   * @param enableY Enable Y-axis transient detection.
+   * @param enableZ Enable Z-axis detection; also controls X in the current implementation.
+   * @param thresholdMilliG Threshold in milli-g, clamped to 8000 and quantized in 63 milli-g steps.
+   * @param durationMicros Duration in microseconds, clamped and quantized for the current mode/rate.
+   */
   void setTransientDetection(bool enableX,
                              bool enableY,
                              bool enableZ,
                              uint16_t thresholdMilliG,
                              uint32_t durationMicros);
 
+  /** @brief Sampling power/noise mode selections. */
   typedef enum {
     MODE_NORMAL = 0,
     MODE_LOW_NOISE_LOW_POWER = 1,
     MODE_HIGH_RESOLUTION = 2,
     MODE_LOW_POWER = 3,
   } Mode_t;
+  /**
+   * @brief Write the sampling power/noise mode; put the sensor in standby first.
+   */
   void setMode(Mode_t);
+  /**
+   * @brief Return the configured sampling power/noise mode.
+   */
   Mode_t getMode();
 
 private:
